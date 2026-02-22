@@ -1,7 +1,7 @@
 ---
 name: outsmart-lp-sniping
 description: Buy tokens at or near LP creation on Solana. Use when user says "snipe", "sniping", "bonding curve", "graduation", "migration", "new pool", "LP created", "snipe LP", "bloom bot", "set up snipe", "pump fun", "launchlab", or mentions buying a token the instant its LP pool goes live.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__dex_snipe, mcp__outsmart-agent__dex_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__dex_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -25,11 +25,11 @@ Block-0 sniping (gRPC listeners) isn't built yet — that's Phase E. Here's the 
 
 **2. Snipe** — the moment the pool exists, buy immediately:
 ```
-solana_snipe(dex, pool, token, amount=0.05, tip_sol=0.005)
+dex_snipe(dex, pool, token, amount=0.05, tip_sol=0.005)
 ```
 Or if you don't have the pool address yet:
 ```
-solana_buy(dex="jupiter-ultra", token=MINT, amount=0.05)
+dex_buy(dex="jupiter-ultra", token=MINT, amount=0.05)
 ```
 
 You won't get block-0, but if you're watching a curve at 95% and buy within seconds of graduation, you're still early.
@@ -76,13 +76,13 @@ If it looks good — hold, maybe add more, or move into the LP play.
 ## After — The LP Play
 
 If the token has legs:
-1. **< 5 min, big volume** → create DAMM v2 pool via `solana_create_pool` with 99% starting fee
+1. **< 5 min, big volume** → create DAMM v2 pool via `dex_create_pool` with 99% starting fee
 2. **> 30 min, established** → open DLMM position for steady fees
 
 ## Risks
 
 - **Rugs** — that's why you size small. Evaluate after you're in.
-- **Front-run by MEV** — use `solana_snipe` with Jito tips for priority
+- **Front-run by MEV** — use `dex_snipe` with Jito tips for priority
 - **Late entry** — don't chase with bigger size. Best snipers miss most.
 - **Stalled curves** — only target >85% with active momentum
 

@@ -18,11 +18,12 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-32 tools over stdio transport (14 DEX + 9 Jupiter + 9 Percolator):
-- `solana_buy`, `solana_sell`, `solana_quote`, `solana_snipe`
-- `solana_find_pool`, `solana_create_pool`, `solana_create_token`
-- `solana_add_liquidity`, `solana_remove_liquidity`, `solana_claim_fees`, `solana_list_positions`
-- `solana_token_info`, `solana_list_dexes`, `solana_wallet_balance`
+32 tools over stdio transport (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 9 Percolator):
+- `dex_buy`, `dex_sell`, `dex_quote`, `dex_snipe`
+- `dex_find_pool`, `dex_create_pool`, `dex_add_liquidity`, `dex_remove_liquidity`
+- `dex_claim_fees`, `dex_list_positions`, `dex_list_dexes`
+- `launchpad_create_coin`
+- `solana_token_info`, `solana_wallet_balance`
 - `jupiter_shield`, `jupiter_prediction_events`, `jupiter_prediction_market`
 - `jupiter_prediction_order`, `jupiter_prediction_positions`, `jupiter_prediction_claim`
 - `jupiter_dca_create`, `jupiter_dca_list`, `jupiter_dca_cancel`

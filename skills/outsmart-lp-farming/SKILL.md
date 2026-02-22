@@ -1,7 +1,7 @@
 ---
 name: outsmart-lp-farming
 description: Manage LP positions on Solana to earn swap fees. Use when user says "farm", "LP", "provide liquidity", "earn yield", "compound fees", "add liquidity", "remove liquidity", "claim fees", "rebalance", "create pool", "DAMM", "DLMM", or mentions earning passive income on Solana DEXes.
-allowed-tools: mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes
+allowed-tools: mcp__outsmart-agent__dex_add_liquidity, mcp__outsmart-agent__dex_remove_liquidity, mcp__outsmart-agent__dex_claim_fees, mcp__outsmart-agent__dex_list_positions, mcp__outsmart-agent__dex_create_pool, mcp__outsmart-agent__dex_find_pool, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__dex_list_dexes
 model: opus
 license: ISC
 metadata:
@@ -79,10 +79,10 @@ If price drops below your lowest bin, you're holding 100% of the token and 0% SO
 ### Rebalancing
 
 When your position goes out of range:
-1. `solana_claim_fees` → collect what you've earned
-2. `solana_remove_liquidity(percentage=100)` → pull everything out
-3. `solana_quote` → get the new price
-4. `solana_add_liquidity` → re-add centered on current price
+1. `dex_claim_fees` → collect what you've earned
+2. `dex_remove_liquidity(percentage=100)` → pull everything out
+3. `dex_quote` → get the new price
+4. `dex_add_liquidity` → re-add centered on current price
 
 Don't rebalance for small moves — each cycle costs ~0.005-0.02 SOL in gas.
 
@@ -104,9 +104,9 @@ A brand new token (< 5 min old) with:
 - Many manual swap transactions (Jupiter, DFlow, GMGN, Axiom traders — not just bots)
 - No existing DAMM v2 pool
 
-That's your window. Check if a pool exists with `solana_find_pool(dex="meteora-damm-v2", base_mint=TOKEN)`. If `found: false`, create it with `solana_create_pool` and seed it.
+That's your window. Check if a pool exists with `dex_find_pool(dex="meteora-damm-v2", base_mint=TOKEN)`. If `found: false`, create it with `dex_create_pool` and seed it.
 
-### Two Creation Paths (via `solana_create_pool` MCP tool)
+### Two Creation Paths (via `dex_create_pool` MCP tool)
 
 **Custom Pool** (`mode: "custom"`) — full control over fee schedule, dynamic fees, collect mode, activation timing. Use when you want to tune everything.
 
@@ -145,12 +145,12 @@ Two phases, two protocols, capturing both the explosive start and the steady tai
 ## Day-to-Day LP Workflow
 
 1. **Find the opportunity:** `solana_token_info(token)` — if volume24h / liquidity > 1.0, the pool is earning good fees relative to its size
-2. **Check the pool:** `solana_quote(dex, pool)` — make sure it's active
-3. **Add LP:** `solana_add_liquidity(...)` — DLMM or DAMM v2 depending on token age
-4. **Monitor:** `solana_list_positions(dex, pool)` — check in-range status (DLMM) or fee accumulation (DAMM v2)
-5. **Claim:** `solana_claim_fees(dex, pool)` — collect regularly
+2. **Check the pool:** `dex_quote(dex, pool)` — make sure it's active
+3. **Add LP:** `dex_add_liquidity(...)` — DLMM or DAMM v2 depending on token age
+4. **Monitor:** `dex_list_positions(dex, pool)` — check in-range status (DLMM) or fee accumulation (DAMM v2)
+5. **Claim:** `dex_claim_fees(dex, pool)` — collect regularly
 6. **Compound:** Re-add claimed fees as new liquidity
-7. **Exit:** `solana_remove_liquidity(dex, pool, percentage=100)` — 100% on DLMM auto-claims and closes; 100% on DAMM v2 closes the position NFT
+7. **Exit:** `dex_remove_liquidity(dex, pool, percentage=100)` — 100% on DLMM auto-claims and closes; 100% on DAMM v2 closes the position NFT
 
 ## Risk Management
 

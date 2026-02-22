@@ -1,7 +1,7 @@
 ---
 name: outsmart-trenching
 description: Trade memecoins on Solana like a degen. Use when user says "memecoin", "trench", "trenching", "degen", "ape", "GMGN", "Axiom", "pump", "moon", "100x", "gem", "alpha", "CT", "crypto twitter", "smart money", "whale", "fresh wallet", "dev wallet", "rug", "honeypot", "insider", "sniper", "copy trade", or mentions memecoin trading on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__dex_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -110,7 +110,7 @@ These checks help you decide whether to **add more** or **get out** — not whet
 ### After — The LP Play
 
 If the token has legs:
-1. **< 5 min, big volume** → create DAMM v2 pool via `solana_create_pool` with 99% fee, capture early volume
+1. **< 5 min, big volume** → create DAMM v2 pool via `dex_create_pool` with 99% fee, capture early volume
 2. **> 30 min, established** → open DLMM position for ongoing fees
 3. Memecoin bag + LP fees = dual income from one trade
 
@@ -133,8 +133,8 @@ If the token has legs:
 
 **What the agent can do directly (MCP tools):**
 - `solana_token_info` — DexScreener data (price, volume, buyers, liquidity, age)
-- `solana_buy` / `solana_sell` — execute trades
-- `solana_find_pool` — discover pool addresses
+- `dex_buy` / `dex_sell` — execute trades
+- `dex_find_pool` — discover pool addresses
 - Jupiter Shield API — call via WebFetch: `GET https://api.jup.ag/ultra/v1/shield?mints={mint}`
 
 **External tools (agent can browse via WebFetch but can't fully automate):**

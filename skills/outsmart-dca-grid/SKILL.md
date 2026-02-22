@@ -1,7 +1,7 @@
 ---
 name: outsmart-dca-grid
 description: Dollar-cost average and grid trade on Solana. Use when user says "DCA", "dollar cost average", "grid", "accumulate", "buy the dip", "range trading", "recurring", or mentions systematic buying strategies.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_add_liquidity, mcp__outsmart-agent__dex_remove_liquidity, mcp__outsmart-agent__dex_claim_fees, mcp__outsmart-agent__dex_list_positions, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
 model: opus
 license: ISC
 metadata:
@@ -37,13 +37,13 @@ Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it. Set
 
 ### Manual DCA (Alternative — Agent-Controlled)
 
-Execute buys yourself on a schedule via `solana_buy`. More control — you can add conditions (only buy if price is below X, skip if gas is high, etc). Downside: agent needs to stay online.
+Execute buys yourself on a schedule via `dex_buy`. More control — you can add conditions (only buy if price is below X, skip if gas is high, etc). Downside: agent needs to stay online.
 
 ```
 Every 6 hours:
 1. solana_wallet_balance() → check SOL
 2. solana_token_info(token) → current price
-3. solana_buy(dex="jupiter-ultra", token, amount) → buy
+3. dex_buy(dex="jupiter-ultra", token, amount) → buy
 ```
 
 ### DCA Rules
@@ -52,7 +52,7 @@ Every 6 hours:
 - Fixed interval — don't deviate, that defeats the purpose
 - Stop if: project dies, exploit happens, team exits
 - Prefer `jupiter_dca_create` for set-and-forget — keepers handle execution
-- Use manual `solana_buy` only when you need conditional logic (price thresholds, etc.)
+- Use manual `dex_buy` only when you need conditional logic (price thresholds, etc.)
 
 ## Grid Trading with DLMM
 
@@ -86,9 +86,9 @@ Use one-sided DLMM positions as a grid of buy/sell orders. When price crosses a 
 
 ### Managing Grids
 
-- Check `solana_list_positions` every few hours
+- Check `dex_list_positions` every few hours
 - When all bins filled on one side → remove, re-add centered on new price
-- Always `solana_claim_fees` before rebalancing
+- Always `dex_claim_fees` before rebalancing
 - Each rebalance cycle costs ~0.01-0.02 SOL — don't rebalance for small moves
 
 ## Combining Both

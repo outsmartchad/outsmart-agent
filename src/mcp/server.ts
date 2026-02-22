@@ -5,12 +5,16 @@
  * Exposes 32 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
- * DEX Tools (14):
- *   solana_buy, solana_sell, solana_quote, solana_find_pool, solana_snipe,
- *   solana_create_pool, solana_create_token,
- *   solana_add_liquidity, solana_remove_liquidity, solana_claim_fees,
- *   solana_list_positions, solana_token_info, solana_list_dexes,
- *   solana_wallet_balance
+ * DEX Tools (11):
+ *   dex_buy, dex_sell, dex_quote, dex_find_pool, dex_snipe,
+ *   dex_create_pool, dex_add_liquidity, dex_remove_liquidity,
+ *   dex_claim_fees, dex_list_positions, dex_list_dexes
+ *
+ * Launchpad Tools (1):
+ *   launchpad_create_coin
+ *
+ * Solana Tools (2):
+ *   solana_token_info, solana_wallet_balance
  *
  * Jupiter Tools (9):
  *   jupiter_shield,
@@ -54,7 +58,7 @@ function getAdapter(dex: string): IDexAdapter {
     return getDexAdapter(dex);
   } catch (err: any) {
     throw new Error(
-      `DEX adapter "${dex}" not found. Use solana_list_dexes to see available adapters. ${err.message}`,
+      `DEX adapter "${dex}" not found. Use dex_list_dexes to see available adapters. ${err.message}`,
     );
   }
 }
@@ -89,12 +93,12 @@ const server = new McpServer({
 });
 
 // ---------------------------------------------------------------------------
-// Tool: solana_buy
+// Tool: dex_buy
 // ---------------------------------------------------------------------------
 
 // @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
 server.tool(
-  "solana_buy",
+  "dex_buy",
   "Buy tokens with SOL on a Solana DEX. For aggregators (jupiter-ultra, dflow), provide 'token'. For on-chain DEXes (raydium-*, meteora-*, orca, etc.), provide 'pool'.",
   {
     dex: z.string().describe("DEX adapter name (e.g. 'jupiter-ultra', 'raydium-cpmm', 'meteora-dlmm')"),
@@ -126,11 +130,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_sell
+// Tool: dex_sell
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_sell",
+  "dex_sell",
   "Sell tokens for SOL on a Solana DEX. Specify percentage of holdings to sell (0-100).",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -160,11 +164,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_quote
+// Tool: dex_quote
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_quote",
+  "dex_quote",
   "Get the current on-chain price from a pool. Reads directly from on-chain state.",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -185,11 +189,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_add_liquidity
+// Tool: dex_add_liquidity
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_add_liquidity",
+  "dex_add_liquidity",
   "Add liquidity to a pool. Supports DLMM strategies (spot, curve, bid-ask) and bin configuration.",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -222,11 +226,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_remove_liquidity
+// Tool: dex_remove_liquidity
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_remove_liquidity",
+  "dex_remove_liquidity",
   "Remove liquidity from a pool. Specify percentage to withdraw (0-100).",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -253,11 +257,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_claim_fees
+// Tool: dex_claim_fees
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_claim_fees",
+  "dex_claim_fees",
   "Claim accumulated swap fees from LP positions in a pool.",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -279,11 +283,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_list_positions
+// Tool: dex_list_positions
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_list_positions",
+  "dex_list_positions",
   "List user's LP positions in a pool. Shows token amounts, fee balances, and in-range status.",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -324,11 +328,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_list_dexes
+// Tool: dex_list_dexes
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_list_dexes",
+  "dex_list_dexes",
   "List all available DEX adapters and their capabilities. Optionally filter by capability.",
   {
     capability: z
@@ -394,11 +398,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_find_pool
+// Tool: dex_find_pool
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_find_pool",
+  "dex_find_pool",
   "Find a pool address for a token pair on a specific DEX. Returns the pool address, base/quote mints, and liquidity info.",
   {
     dex: z.string().describe("DEX adapter name (e.g. 'meteora-damm-v2', 'raydium-cpmm')"),
@@ -423,11 +427,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_snipe
+// Tool: dex_snipe
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_snipe",
+  "dex_snipe",
   "Competitive buy with Jito MEV tip for faster execution. Use for time-sensitive buys where you want priority over other traders.",
   {
     dex: z.string().describe("DEX adapter name"),
@@ -460,12 +464,12 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_create_pool
+// Tool: dex_create_pool
 // ---------------------------------------------------------------------------
 
 // @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
 server.tool(
-  "solana_create_pool",
+  "dex_create_pool",
   "Create a new DAMM v2 liquidity pool on Meteora. Two modes: 'custom' (full fee schedule control) or 'config' (use pre-existing on-chain config). The alpha play is being the first pool creator on a new token — set 99% starting fee to capture early volume.",
   {
     mode: z.enum(["custom", "config"]).describe("'custom' for full fee control, 'config' to use a pre-existing on-chain config"),
@@ -539,11 +543,11 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_create_token
+// Tool: launchpad_create_coin
 // ---------------------------------------------------------------------------
 
 server.tool(
-  "solana_create_token",
+  "launchpad_create_coin",
   "Create a new token on PumpFun with a bonding curve. Deploys a new SPL token (6 decimals, 1B supply, mint/freeze disabled) and creates a bonding curve. The token graduates to PumpSwap AMM when the curve fills (~85 SOL).",
   {
     name: z.string().describe("Token name (e.g. 'My Token')"),

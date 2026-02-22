@@ -51,23 +51,33 @@ npx skills add outsmartchad/outsmart-agent
 
 ## MCP Tools
 
-### DEX Tools (14)
+### DEX Tools (11)
 
 | Tool | What |
 |------|------|
-| `solana_buy` | Buy tokens with SOL on any DEX |
-| `solana_sell` | Sell tokens (percentage-based) |
-| `solana_quote` | On-chain price from a pool |
-| `solana_snipe` | Competitive buy with Jito MEV tip |
-| `solana_find_pool` | Find pool address for a token pair |
-| `solana_create_pool` | Create DAMM v2 pool on Meteora |
-| `solana_create_token` | Launch token on PumpFun |
-| `solana_add_liquidity` | Add LP (DLMM bins, DAMM v2 full-range) |
-| `solana_remove_liquidity` | Remove LP |
-| `solana_claim_fees` | Collect swap fees from LP |
-| `solana_list_positions` | Your LP positions in a pool |
+| `dex_buy` | Buy tokens with SOL on any DEX |
+| `dex_sell` | Sell tokens (percentage-based) |
+| `dex_quote` | On-chain price from a pool |
+| `dex_snipe` | Competitive buy with Jito MEV tip |
+| `dex_find_pool` | Find pool address for a token pair |
+| `dex_create_pool` | Create DAMM v2 pool on Meteora |
+| `dex_add_liquidity` | Add LP (DLMM bins, DAMM v2 full-range) |
+| `dex_remove_liquidity` | Remove LP |
+| `dex_claim_fees` | Collect swap fees from LP |
+| `dex_list_positions` | Your LP positions in a pool |
+| `dex_list_dexes` | All 18 adapters + capabilities |
+
+### Launchpad Tools (1)
+
+| Tool | What |
+|------|------|
+| `launchpad_create_coin` | Launch token on PumpFun |
+
+### Solana Tools (2)
+
+| Tool | What |
+|------|------|
 | `solana_token_info` | DexScreener market data |
-| `solana_list_dexes` | All 18 adapters + capabilities |
 | `solana_wallet_balance` | SOL and token balances |
 
 ### Jupiter Tools (9)
@@ -166,7 +176,7 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 
 ## Roadmap
 
-- [x] MCP Server — 32 tools (14 DEX + 9 Jupiter + 9 Percolator), 18 DEX adapters
+- [x] MCP Server — 32 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 9 Percolator), 18 DEX adapters
 - [x] AI Skills — 9 strategy skills
 - [x] Claude Code Plugin manifest
 - [x] Percolator — Permissionless perp exchange creation, trading, LP, insurance

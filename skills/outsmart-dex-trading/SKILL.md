@@ -1,7 +1,7 @@
 ---
 name: outsmart-dex-trading
 description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "wallet balance", or mentions trading tokens on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__dex_snipe, mcp__outsmart-agent__dex_find_pool, mcp__outsmart-agent__dex_create_pool, mcp__outsmart-agent__launchpad_create_coin, mcp__outsmart-agent__dex_add_liquidity, mcp__outsmart-agent__dex_remove_liquidity, mcp__outsmart-agent__dex_claim_fees, mcp__outsmart-agent__dex_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__dex_list_dexes, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
 model: opus
 license: ISC
 metadata:
@@ -17,19 +17,19 @@ This is your tool reference. 23 MCP tools (14 DEX + 9 Jupiter), 18 DEX adapters,
 
 | Tool | What It Does | Key Params |
 |------|-------------|------------|
-| `solana_buy` | Buy tokens with SOL | `dex`, `pool` or `token`, `amount` |
-| `solana_sell` | Sell tokens for SOL | `dex`, `pool` or `token`, `percentage` |
-| `solana_quote` | On-chain price check | `dex`, `pool` |
-| `solana_snipe` | Competitive buy with Jito MEV tip | `dex`, `pool`, `token`, `amount`, `tip_sol` |
-| `solana_find_pool` | Find pool address for a token pair | `dex`, `base_mint` |
-| `solana_create_pool` | Create DAMM v2 pool (Meteora) | `mode`, `base_mint`, fee params |
-| `solana_create_token` | Launch token on PumpFun | `name`, `symbol`, `metadata_uri` |
-| `solana_add_liquidity` | Deposit into a pool | `dex`, `pool`, `amount_sol` |
-| `solana_remove_liquidity` | Withdraw from a pool | `dex`, `pool`, `percentage` |
-| `solana_claim_fees` | Collect LP fees | `dex`, `pool` |
-| `solana_list_positions` | See your LP positions | `dex`, `pool` |
+| `dex_buy` | Buy tokens with SOL | `dex`, `pool` or `token`, `amount` |
+| `dex_sell` | Sell tokens for SOL | `dex`, `pool` or `token`, `percentage` |
+| `dex_quote` | On-chain price check | `dex`, `pool` |
+| `dex_snipe` | Competitive buy with Jito MEV tip | `dex`, `pool`, `token`, `amount`, `tip_sol` |
+| `dex_find_pool` | Find pool address for a token pair | `dex`, `base_mint` |
+| `dex_create_pool` | Create DAMM v2 pool (Meteora) | `mode`, `base_mint`, fee params |
+| `launchpad_create_coin` | Launch token on PumpFun | `name`, `symbol`, `metadata_uri` |
+| `dex_add_liquidity` | Deposit into a pool | `dex`, `pool`, `amount_sol` |
+| `dex_remove_liquidity` | Withdraw from a pool | `dex`, `pool`, `percentage` |
+| `dex_claim_fees` | Collect LP fees | `dex`, `pool` |
+| `dex_list_positions` | See your LP positions | `dex`, `pool` |
 | `solana_token_info` | DexScreener market data | `token` |
-| `solana_list_dexes` | All 18 adapters + capabilities | |
+| `dex_list_dexes` | All 18 adapters + capabilities | |
 | `solana_wallet_balance` | SOL and token balances | |
 
 ## Jupiter Tools
@@ -71,11 +71,11 @@ This is your tool reference. 23 MCP tools (14 DEX + 9 Jupiter), 18 DEX adapters,
 **On-chain adapters** need `pool` (pool address), token is auto-detected:
 - Everything else (raydium-*, meteora-*, pumpfun-*, orca, etc.)
 
-Run `solana_list_dexes` to see all 18 and what each supports.
+Run `dex_list_dexes` to see all 18 and what each supports.
 
 ## Tool Details
 
-### solana_buy
+### dex_buy
 
 ```json
 // Aggregator — just need the mint
@@ -95,7 +95,7 @@ Run `solana_list_dexes` to see all 18 and what each supports.
 | `tip_sol` | No | Jito MEV tip |
 | `dry_run` | No | Simulate only |
 
-### solana_sell
+### dex_sell
 
 ```json
 { "dex": "jupiter-ultra", "token": "MINT_ADDRESS", "percentage": 100 }
@@ -103,7 +103,7 @@ Run `solana_list_dexes` to see all 18 and what each supports.
 
 Same params as buy, but `percentage` (0-100) instead of `amount`.
 
-### solana_quote
+### dex_quote
 
 ```json
 { "dex": "raydium-cpmm", "pool": "POOL_ADDRESS" }
@@ -111,7 +111,7 @@ Same params as buy, but `percentage` (0-100) instead of `amount`.
 
 Returns price, base/quote mints, timestamp.
 
-### solana_find_pool
+### dex_find_pool
 
 ```json
 { "dex": "meteora-damm-v2", "base_mint": "TOKEN_MINT" }
@@ -119,15 +119,15 @@ Returns price, base/quote mints, timestamp.
 
 Returns pool address, base/quote mints, liquidity. Returns `{ found: false }` if no pool exists — useful for checking if you should create one.
 
-### solana_snipe
+### dex_snipe
 
 ```json
 { "dex": "meteora-damm-v2", "pool": "POOL", "token": "MINT", "amount": 0.05, "tip_sol": 0.005 }
 ```
 
-Same as `solana_buy` but with mandatory Jito MEV tip for priority execution. Use when speed matters.
+Same as `dex_buy` but with mandatory Jito MEV tip for priority execution. Use when speed matters.
 
-### solana_create_pool
+### dex_create_pool
 
 Create a new DAMM v2 pool on Meteora. Two modes:
 
@@ -159,7 +159,7 @@ Create a new DAMM v2 pool on Meteora. Two modes:
 }
 ```
 
-### solana_create_token
+### launchpad_create_coin
 
 Create a new token on PumpFun with a bonding curve. Graduates to PumpSwap at ~85 SOL.
 
@@ -169,7 +169,7 @@ Create a new token on PumpFun with a bonding curve. Graduates to PumpSwap at ~85
 
 Returns the new mint address in `positionAddress` and bonding curve PDA in `poolAddress`.
 
-### solana_add_liquidity
+### dex_add_liquidity
 
 ```json
 { "dex": "meteora-dlmm", "pool": "POOL", "amount_sol": 0.5, "strategy": "spot", "bins": 50 }
@@ -181,7 +181,7 @@ Returns the new mint address in `positionAddress` and bonding curve PDA in `pool
 | `strategy` | DLMM only: "spot", "curve", "bid-ask" |
 | `bins` | DLMM only: default 50, max 69 |
 
-### solana_remove_liquidity
+### dex_remove_liquidity
 
 ```json
 { "dex": "meteora-dlmm", "pool": "POOL", "percentage": 100 }
@@ -189,7 +189,7 @@ Returns the new mint address in `positionAddress` and bonding curve PDA in `pool
 
 100% on DLMM auto-claims fees and closes the position. 100% on DAMM v2 closes the position NFT.
 
-### solana_claim_fees / solana_list_positions
+### dex_claim_fees / dex_list_positions
 
 ```json
 { "dex": "meteora-dlmm", "pool": "POOL" }
@@ -218,33 +218,33 @@ Returns from DexScreener: name, price, mcap, volume (5m/1h/6h/24h), buyers, liqu
 **Buy a token safely:**
 ```
 1. solana_token_info(token) → check liquidity, age, volume
-2. solana_buy(dex="jupiter-ultra", token, amount, dry_run=true) → simulate
-3. solana_buy(dex="jupiter-ultra", token, amount) → execute
+2. dex_buy(dex="jupiter-ultra", token, amount, dry_run=true) → simulate
+3. dex_buy(dex="jupiter-ultra", token, amount) → execute
 ```
 
 **Find a pool (don't know the address):**
 ```
-1. solana_find_pool(dex, base_mint) → get pool address
+1. dex_find_pool(dex, base_mint) → get pool address
 ```
 
 **Provide liquidity:**
 ```
-1. solana_quote(dex, pool) → current price
-2. solana_add_liquidity(dex, pool, amount_sol, strategy, bins)
-3. solana_list_positions(dex, pool) → verify
+1. dex_quote(dex, pool) → current price
+2. dex_add_liquidity(dex, pool, amount_sol, strategy, bins)
+3. dex_list_positions(dex, pool) → verify
 ```
 
 **Create a DAMM v2 pool (first LP alpha):**
 ```
-1. solana_find_pool(dex="meteora-damm-v2", base_mint) → check if pool exists
-2. If not found → solana_create_pool(mode="custom", base_mint, ...) → create with 99% fee
-3. solana_add_liquidity → add more LP if needed
+1. dex_find_pool(dex="meteora-damm-v2", base_mint) → check if pool exists
+2. If not found → dex_create_pool(mode="custom", base_mint, ...) → create with 99% fee
+3. dex_add_liquidity → add more LP if needed
 ```
 
 **Exit LP:**
 ```
-1. solana_claim_fees(dex, pool) → collect first
-2. solana_remove_liquidity(dex, pool, percentage=100) → withdraw
+1. dex_claim_fees(dex, pool) → collect first
+2. dex_remove_liquidity(dex, pool, percentage=100) → withdraw
 ```
 
 ## Safety

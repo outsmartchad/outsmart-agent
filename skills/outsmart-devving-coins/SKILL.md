@@ -1,7 +1,7 @@
 ---
 name: outsmart-devving-coins
 description: Launch tokens on Solana launchpads. Use when user says "dev a coin", "devving", "launch token", "create token", "bonding curve", "pump fun", "pumpfun", "launchlab", "jupiter studio", "DBC", "dynamic bonding curve", "launch a meme", "deploy token", or mentions creating/launching a new token on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__launchpad_create_coin, mcp__outsmart-agent__dex_create_pool, mcp__outsmart-agent__dex_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__dex_list_dexes, mcp__outsmart-agent__jupiter_shield, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -55,7 +55,7 @@ The default choice for memecoin launches. Biggest audience, most eyeballs, every
 - **All tokens:** 6 decimals, 1B supply, mint/freeze authority disabled by default
 - **Dev buy:** You can buy your own token at creation (sets initial price, shows conviction)
 
-The MCP server has a `solana_create_token` tool that wraps PumpFun's create method:
+The MCP server has a `launchpad_create_coin` tool that wraps PumpFun's create method:
 
 ```json
 {
@@ -106,7 +106,7 @@ What matters to you: if a token was launched via any DBC-based launchpad, the ou
 |-------------|-----|-----|
 | Max eyeballs, quick meme | **PumpFun** | Biggest audience, simplest flow |
 | USDC curve, anti-snipe, vesting | **Jupiter Studio** | Built-in protections, DAMM v2 graduation |
-| Agent autonomously launching | **PumpFun** | Single TX via `solana_create_token` MCP tool |
+| Agent autonomously launching | **PumpFun** | Single TX via `launchpad_create_coin` MCP tool |
 | DAMM v2 graduation (for LP farming after) | **Jupiter Studio** or **Meteora DBC** | Both graduate to DAMM v2 |
 
 ## After Graduation — The Real Money
@@ -114,7 +114,7 @@ What matters to you: if a token was launched via any DBC-based launchpad, the ou
 Launching the token is just step 1. The revenue comes from what happens after:
 
 1. **Token graduates** → auto-migrates to DEX pool (PumpSwap for PumpFun, DAMM v2 for Jupiter Studio/DBC, CPMM for LaunchLab)
-2. **Create a DAMM v2 pool** (if it graduated to PumpSwap or Raydium, not already on DAMM v2) → use `solana_create_pool` with 99% starting fee decaying to 2% → capture massive early volume fees. Cost: ~0.02 SOL.
+2. **Create a DAMM v2 pool** (if it graduated to PumpSwap or Raydium, not already on DAMM v2) → use `dex_create_pool` with 99% starting fee decaying to 2% → capture massive early volume fees. Cost: ~0.02 SOL.
 3. **As token matures** (>30 min, real volume) → open a DLMM position for concentrated fee capture. Cost: ~0.2 SOL.
 4. **Claim fees + compound**
 

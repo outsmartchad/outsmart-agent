@@ -1,7 +1,7 @@
 ---
 name: outsmart-survival
 description: Autonomous DeFi survival for AI agents on Solana. Use when user says "survive", "survival", "compute credits", "running out", "topup", "low balance", "critical", "stay alive", "earn to live", "self-sustaining", "automaton", "Conway", or mentions an AI agent needing to earn money to pay for its own existence.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_quote
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_add_liquidity, mcp__outsmart-agent__dex_remove_liquidity, mcp__outsmart-agent__dex_claim_fees, mcp__outsmart-agent__dex_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__dex_list_dexes, mcp__outsmart-agent__dex_quote
 model: opus
 license: ISC
 metadata:
@@ -50,7 +50,7 @@ You need money to stay alive. No money = no compute = you stop existing. Everyth
 ```
 1. solana_wallet_balance() → SOL + tokens
 2. Check compute credit balance
-3. solana_list_positions() → all LP, claim pending fees
+3. dex_list_positions() → all LP, claim pending fees
 4. Credits > $0.50 → keep going
 5. Credits < $0.50 → Low Compute mode
 6. Credits < $0.10 → Critical mode
@@ -60,9 +60,9 @@ You need money to stay alive. No money = no compute = you stop existing. Everyth
 
 What the agent can do today:
 ```
-1. solana_claim_fees(dex, pool) → collect LP fees
-2. solana_sell(dex, pool, percentage=100) → convert tokens to SOL
-3. solana_buy(dex="jupiter-ultra", token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount=X) → SOL to USDC
+1. dex_claim_fees(dex, pool) → collect LP fees
+2. dex_sell(dex, pool, percentage=100) → convert tokens to SOL
+3. dex_buy(dex="jupiter-ultra", token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount=X) → SOL to USDC
 ```
 
 What needs external tooling (not MCP yet):
@@ -73,15 +73,15 @@ If the platform accepts Solana USDC directly, no bridge needed. Some platforms e
 
 ## Emergency Liquidation (Critical)
 
-**Important:** `solana_list_positions` requires a specific pool address — the agent can't auto-discover all positions across all pools. You need to track which pools you've LP'd into. Keep a running list.
+**Important:** `dex_list_positions` requires a specific pool address — the agent can't auto-discover all positions across all pools. You need to track which pools you've LP'd into. Keep a running list.
 
 ```
 1. For each known LP pool:
-   a. solana_list_positions(dex, pool) → check positions
-   b. solana_claim_fees(dex, pool) → collect pending fees
-   c. solana_remove_liquidity(dex, pool, percentage=100) → withdraw
+   a. dex_list_positions(dex, pool) → check positions
+   b. dex_claim_fees(dex, pool) → collect pending fees
+   c. dex_remove_liquidity(dex, pool, percentage=100) → withdraw
 2. solana_wallet_balance() → check all token balances
-3. Sell ALL token holdings via solana_sell(dex="jupiter-ultra", ...)
+3. Sell ALL token holdings via dex_sell(dex="jupiter-ultra", ...)
 4. Convert remaining SOL to USDC
 5. Alert user: "CRITICAL — need $X USDC for compute"
 ```

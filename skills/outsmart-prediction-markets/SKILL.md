@@ -1,7 +1,7 @@
 ---
 name: outsmart-prediction-markets
 description: Trade prediction markets on Solana via Jupiter (which integrates Polymarket) and MetaDAO Futarchy. Use when user says "prediction", "prediction market", "bet", "forecast", "Polymarket", "Jupiter markets", "binary outcome", "will X happen", "probability", "odds", "futarchy", "decision market", or mentions betting on real-world events.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, WebFetch
+allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -36,7 +36,7 @@ All Jupiter Prediction operations are fully MCP-executable. The agent can browse
 
 Fees scale with uncertainty — contracts near $0.50 cost more to trade. No fees on claiming payouts.
 
-**Futarchy markets** use a different path — `solana_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
+**Futarchy markets** use a different path — `dex_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
 
 ### Workflow
 

@@ -45,16 +45,16 @@ The MCP server calls `getDexAdapter()`, `listDexAdapters()`, `getInfoFromDexscre
 
 | MCP Tool | outsmart API | Required Params | Optional Params |
 |----------|-------------|-----------------|-----------------|
-| `solana_buy` | `adapter.buy()` | `dex`, `pool` OR `token`, `amount` | `slippage_bps`, `tip_sol`, `dry_run` |
-| `solana_sell` | `adapter.sell()` | `dex`, `pool` OR `token`, `percentage` | `slippage_bps`, `dry_run` |
-| `solana_quote` | `adapter.getPrice()` | `dex`, `pool` | |
-| `solana_find_pool` | `adapter.findPool()` | `dex`, `token` | `quote_mint` |
-| `solana_add_liquidity` | `adapter.addLiquidity()` | `dex`, `pool` | `amount_sol`, `amount_token`, `strategy`, `bins` |
-| `solana_remove_liquidity` | `adapter.removeLiquidity()` | `dex`, `pool`, `percentage` | `position_address` |
-| `solana_claim_fees` | `adapter.claimFees()` | `dex`, `pool` | `position_address` |
-| `solana_list_positions` | `adapter.listPositions()` | `dex`, `pool` | |
+| `dex_buy` | `adapter.buy()` | `dex`, `pool` OR `token`, `amount` | `slippage_bps`, `tip_sol`, `dry_run` |
+| `dex_sell` | `adapter.sell()` | `dex`, `pool` OR `token`, `percentage` | `slippage_bps`, `dry_run` |
+| `dex_quote` | `adapter.getPrice()` | `dex`, `pool` | |
+| `dex_find_pool` | `adapter.findPool()` | `dex`, `token` | `quote_mint` |
+| `dex_add_liquidity` | `adapter.addLiquidity()` | `dex`, `pool` | `amount_sol`, `amount_token`, `strategy`, `bins` |
+| `dex_remove_liquidity` | `adapter.removeLiquidity()` | `dex`, `pool`, `percentage` | `position_address` |
+| `dex_claim_fees` | `adapter.claimFees()` | `dex`, `pool` | `position_address` |
+| `dex_list_positions` | `adapter.listPositions()` | `dex`, `pool` | |
 | `solana_token_info` | `getInfoFromDexscreener()` | `token` | |
-| `solana_list_dexes` | `listDexAdapters()` | | `capability` |
+| `dex_list_dexes` | `listDexAdapters()` | | `capability` |
 | `solana_wallet_balance` | `checkBalanceByAddress()` | | `token_mint` |
 
 **Implementation:**

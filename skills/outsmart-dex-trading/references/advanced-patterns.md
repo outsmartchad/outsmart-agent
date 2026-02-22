@@ -9,7 +9,7 @@ Some pools quote in stablecoins (USDC, USDT, USD1) instead of SOL. The outsmart 
 **Buy flow:** SOL → (Jupiter Ultra swap) → stablecoin → (pool buy) → token
 **Sell flow:** token → (pool sell) → stablecoin → (Jupiter Ultra swap) → SOL
 
-This is transparent to the MCP caller — just call `solana_buy` with the pool address, and the library detects the quote mint and auto-swaps.
+This is transparent to the MCP caller — just call `dex_buy` with the pool address, and the library detects the quote mint and auto-swaps.
 
 **Known stablecoin mints:**
 - USDC: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
