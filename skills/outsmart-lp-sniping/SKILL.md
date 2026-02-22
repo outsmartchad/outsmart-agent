@@ -9,148 +9,88 @@ metadata:
   version: '2.0.0'
 ---
 
-# LP Sniping Strategy
+# LP Sniping
 
-Sniping is buying a token **at or near the moment its LP pool is created on a DEX**. You already know the token address before the pool exists. You're watching for liquidity to appear, then buying as early as possible.
+You know a token exists before it has a pool. You're watching it. The moment liquidity appears, you buy.
 
-## What the Agent Can Do Today
+## What You Can Do Right Now
 
-**Automated block-0 sniping (gRPC listeners) is NOT built yet** — that's Phase E in the roadmap. Here's what you CAN do right now:
+Block-0 sniping (gRPC listeners) isn't built yet — that's Phase E. Here's the current playbook:
 
-### 1. Evaluate Launch Candidates
+**1. Evaluate launch candidates** — find tokens worth sniping before they graduate:
+- PumpFun bonding curves at 80%+ filled
+- LaunchLab curves nearing completion
+- Pre-announced mints from CT or private groups
+- Tokens going viral that haven't migrated yet
 
-Monitor upcoming launches and assess which tokens are worth buying early:
-
-- **PumpFun bonding curves** nearing graduation (80%+ filled)
-- **Raydium LaunchLab** curves nearing completion
-- **Pre-announced launches** where the mint address is known
-- Tokens going viral on CT that haven't migrated to DEX yet
-
-### 2. Fast Manual Buy After LP Creation
-
-Once a pool exists, buy immediately via MCP tools:
-
+**2. Fast manual buy** — once the pool exists, buy immediately:
 ```
-solana_token_info(token) → verify pool exists, check initial liquidity
-solana_buy(dex="jupiter-ultra", token=MINT, amount=0.05) → execute buy
+solana_token_info(token) → verify pool exists
+solana_buy(dex="jupiter-ultra", token=MINT, amount=0.05)
 ```
 
-This won't get you block-0 entry, but if you're watching a bonding curve at 95% and buy within seconds of graduation, you're still early.
+You won't get block-0, but if you're watching a curve at 95% and buy within seconds of graduation, you're still early.
 
-### 3. Delegate Automated Sniping to Third-Party Bots
-
-For actual block-0 execution, use a sniping bot alongside outsmart-agent:
-
-| Bot | How | Notes |
-|-----|-----|-------|
-| **Bloom Bot** | Paste mint in Telegram, set amount + slippage | Popular for PumpFun graduation sniping |
-| **Trojan Bot** | Telegram-based, paste address | Fast execution, MEV-protected |
-| **BonkBot** | Telegram, paste mint | Simple UX |
-| **Axiom** | Web interface, snipe tab | Anti-MEV routing, position management |
-
-**Workflow:** Agent identifies the target → user sets up the snipe in a bot → bot handles block-0 execution → agent manages the position afterward (take profits, LP, etc.)
+**3. Delegate to sniping bots** — for actual block-0 execution, use a bot alongside the agent. Bloom Bot, Trojan, BonkBot (Telegram bots), or Axiom (web). The agent identifies targets, the bot handles execution, the agent manages the position after.
 
 ## What to Snipe
 
-### PumpFun Graduation
+**PumpFun graduation** — most common target. Bonding curve fills to 100%, migrates to Raydium AMM. Look for: 80%+ progress, active community, dev hasn't sold, fits current meta, smart money is in the curve.
 
-The most common snipe target. A PumpFun bonding curve fills to 100% and migrates to a Raydium AMM pool.
+**LaunchLab** — same pattern, graduates to Raydium CPMM.
 
-```
-PumpFun Bonding Curve (filling) → 100% filled → Migration TX → Raydium AMM Pool Created
-                                                                       ↑
-                                                              BUY HERE (as fast as possible)
-```
+**Known mints** — sometimes you have the address before the pool exists (dev shared it, project announced, found on-chain).
 
-**How to spot graduation candidates:**
-- Token is at 80%+ bonding curve progress
-- Active community pushing it on CT/Telegram
-- Dev hasn't sold their allocation
-- Strong narrative fit (current meta — see outsmart-trenching skill)
-- Smart money wallets are in the bonding curve (check GMGN)
+## Before You Snipe
 
-### Raydium LaunchLab
+Run the same security checks as trenching:
 
-Same pattern as PumpFun. Token on a Raydium LaunchLab bonding curve migrates to Raydium CPMM when filled.
+1. `solana_token_info(token)` — pool exists? initial liquidity?
+2. Jupiter Shield: `GET /ultra/v1/shield?mints={mint}` — freeze/mint authority
+3. GMGN — MintDisable, LP burn, rug probability, dev history
+4. Bonding curve progress — only >85% filled
+5. Narrative check — is this part of something hot?
 
-### Known Mint (Pre-Announced)
-
-Sometimes you know a token's mint address before it has liquidity:
-- Dev shared the mint in a private group or on CT
-- Project announced a launch time and token address
-- You found it on-chain (token created but no pool yet)
-
-## Evaluation Checklist
-
-Before sniping, run the same security checks as trenching (see outsmart-trenching skill):
-
-```
-1. solana_token_info(token) → check if pool exists yet, initial liquidity
-2. Jupiter Shield: GET /ultra/v1/shield?mints={mint} → freeze/mint authority
-3. GMGN security checks → MintDisable, LP burn, rug probability, dev history
-4. Check bonding curve progress (if applicable) → only snipe >85% filled curves
-5. Assess narrative strength → is this part of a hot meta?
-```
-
-**If any critical red flag (freeze authority, dev rug history, honeypot) → SKIP.** There will always be another launch.
+**Any critical red flag = skip.** Always another launch.
 
 ## Position Sizing
 
-| Scenario | Max Size | Why |
-|----------|---------|-----|
-| Graduation snipe (strong narrative + clean security) | 3-5% of portfolio | Higher conviction, graduated tokens have some validation |
-| Known mint snipe (pre-announced) | 1-2% | Less information available pre-launch |
-| FOMO snipe (no research) | **0%** | If you can't explain why, don't snipe it |
+- Strong narrative + clean security: 3-5% of portfolio
+- Pre-announced, less info available: 1-2%
+- FOMO, no research: **0%.** Don't.
 
-## Exit Strategy
+## Exit Plan
 
-Decide BEFORE you buy:
+Decide before you buy:
 
-| Target | Action |
-|--------|--------|
-| **2x** | Sell 50% — recovered cost basis |
-| **3-5x** | Sell another 25% — locked in profit |
-| **10x+** | Sell remaining or let it ride |
-| **-50%** | Full exit. Volume dead, momentum gone. |
+| Hit | Do |
+|-----|-----|
+| 2x | Sell 50% — cost basis recovered |
+| 3-5x | Sell another 25% |
+| 10x+ | Let the rest ride or take it |
+| -50% | Full exit. Volume dead, it's over. |
 
-```
-solana_sell(dex="jupiter-ultra", token=MINT, percentage=50)   → partial take profit
-solana_sell(dex="jupiter-ultra", token=MINT, percentage=100)  → full exit
-```
+## After — The LP Play
 
-### After Sniping → LP Pipeline
-
-If the token has legs (volume sustaining, community active):
-1. **< 5 min old, big volume** → Create DAMM v2 pool, capture early fees (see outsmart-lp-farming)
-2. **> 30 min, established** → Open DLMM position for ongoing fee capture
+If the token has legs:
+1. **< 5 min, big volume** → create DAMM v2 pool with 99% starting fee (see lp-farming skill)
+2. **> 30 min, established** → open DLMM position for steady fees
 
 ## Risks
 
-| Risk | Mitigation |
-|------|-----------|
-| **Rug pull** | Size small. Check dev wallet history on GMGN. |
-| **Honeypot** | Jupiter Shield check. Test with tiny amount (0.001 SOL). |
-| **Front-run by MEV bots** | Use Jito tips. Or accept you won't get block-0 without a dedicated bot. |
-| **Failed snipe (late entry)** | Accept it. Don't chase with bigger size. The best snipers miss most. |
-| **Bonding curve stalls** | Only target curves >85% filled with active momentum. |
+- **Rugs** — size small, check dev history on GMGN
+- **Honeypots** — Jupiter Shield + test with 0.001 SOL
+- **Front-run by MEV** — use Jito tips, or accept you won't get block-0 without a bot
+- **Late entry** — don't chase with bigger size, best snipers miss most
+- **Stalled curves** — only target >85% with active momentum
 
-## Future: gRPC Sniping (Phase E)
+## Survival Mode
 
-When built, gRPC sniping will provide:
-- Yellowstone gRPC stream filtering DEX program transactions
-- Auto-detection of pool creation for target mints
-- Sub-second buy execution (same block or next block)
-- Exposed as MCP tools (`stream_subscribe`, `stream_events`)
-
-Until then, use the evaluation + manual buy + third-party bot workflow described above.
-
-## Survival Mode Rules
-
-- **Normal:** Active launch evaluation, 5% max per snipe. Full security checklist.
-- **Low Compute:** Reduce to 2% max. Only graduation snipes on 90%+ curves with strong narrative and clean security.
-- **Critical:** **ZERO sniping.** Highest-risk strategy. Cannot afford total losses when dying.
+- **Normal:** Active evaluation, 5% max per snipe, full security checklist
+- **Low Compute:** 2% max, only graduation snipes on 90%+ curves with clean security
+- **Critical:** Zero sniping. Highest-risk strategy. Can't afford total losses.
 
 ## Related Skills
 
-- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Security checklist, meta detection, smart money signals
-- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DAMM v2 pool creation after sniping, LP pipeline
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Security checklist, meta detection
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DAMM v2 pool creation after sniping

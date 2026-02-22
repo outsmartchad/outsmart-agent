@@ -9,49 +9,53 @@ metadata:
   version: '2.0.0'
 ---
 
-# Devving Coins — Launching Tokens on Solana
+# Devving Coins — You're the Dev Now
 
-You're the dev now. This skill covers launching tokens on Solana's major launchpads — PumpFun, Raydium LaunchLab, Jupiter Studio (DBC), and Meteora DBC. Each has different mechanics, costs, and graduation paths.
+Devving a coin is a revenue strategy. You catch a narrative early, launch a token that fits the moment, build hype, and earn from bonding curve fees + the LP pool after graduation. The hard part isn't the tech — it's reading the room.
 
-For an autonomous agent, devving a coin isn't just a meme — it's a **revenue strategy**. You launch a token, seed the narrative, and earn from the bonding curve fees + the DAMM v2 LP pool you create after graduation (see outsmart-lp-farming).
+## Catching What's Hot
 
-## The Launchpad Landscape
+This is the real skill. The token creation is just a transaction. Knowing **what** to launch and **when** is everything.
 
-| Platform | Bonding Curve | Graduation Target | Where It Migrates | Cost to Launch |
-|----------|--------------|-------------------|-------------------|----------------|
-| **PumpFun** | Fixed curve, SOL-denominated | ~85 SOL in curve | Raydium AMM (pumpfun-amm) | ~0.02 SOL |
-| **Raydium LaunchLab** | Configurable curve | Configurable | Raydium CPMM | ~0.02 SOL |
-| **Jupiter Studio (DBC)** | Configurable by market cap | Configurable (e.g., 69k USDC mcap) | Meteora DAMM v2 | ~0.02 SOL |
-| **Meteora DBC** | Dynamic bonding curve | Configurable | Meteora DAMM v2 pool | ~0.02 SOL |
+### Where to Find Narratives
 
-### Important: LaunchLab & Meteora DBC Are Infrastructure
+- **CT (Crypto Twitter/X)** — This is ground zero. Follow alpha callers, watch what's getting quote-tweeted, look for recurring themes. When 5+ accounts start posting about the same thing in an hour, that's a meta forming.
+- **Telegram groups** — Alpha chats, whale watching groups, dev communities. Stuff leaks here before CT.
+- **DexScreener trending** — What's pumping right now? If there's a theme (animals, AI, celebrities, Chinese tokens), that's the meta.
+- **News events** — Elon tweets, political events, celebrity drama, tech announcements. Speed matters — first token up with the right ticker wins.
+- **GMGN/Axiom** — Smart money tracking. When known profitable wallets start buying into a theme, pay attention.
 
-**PumpFun** is its own closed platform — only pump.fun uses PumpFun's bonding curve.
+### Meta Lifecycle
 
-**Raydium LaunchLab** and **Meteora DBC** are different — they're underlying infrastructure that many third-party launchpads build on top of:
+Metas don't last forever. Knowing where you are in the cycle is critical:
 
-- **LaunchLab wrappers:** american.fun and other launchpads use Raydium LaunchLab as their bonding curve engine. When you see a token launched on american.fun, it's a LaunchLab curve under the hood.
-- **Meteora DBC wrappers:** Various AI agent launchpads and startup platforms use Meteora DBC as their bonding curve. Jupiter Studio itself is a frontend for Meteora DBC.
+1. **Birth** (minutes to hours) — A few tokens appear around a theme. Early devs are testing the waters.
+2. **Acceleration** (hours) — CT picks it up. More tokens launch. The best-named ones start running.
+3. **Peak** (hours to 1 day) — Everyone's talking about it. Late tokens still launch but most fail.
+4. **Decay** (1-3 days) — Volume drops. Only the "king" of the meta survives.
+5. **Dead** — Don't launch into a dead meta. You'll lose your SOL.
 
-This matters because:
-1. **Tokens from wrapper platforms trade on the same underlying pools** — a token launched via american.fun is still a LaunchLab pool you can interact with via the `raydium-launchlab` adapter
-2. **More launchpads = more volume** through these curves — more tokens graduating, more LP opportunities
-3. **The outsmart adapters work regardless of which frontend was used** — if it's a LaunchLab curve, `raydium-launchlab` adapter handles it; if it's a Meteora DBC curve, `meteora-dbc` adapter handles it
+**The window to dev a coin is phases 1-2.** By phase 3, you're too late unless you have something genuinely creative.
 
-## PumpFun — The OG Launchpad
+### What Makes a Good Launch
 
-PumpFun is where most memecoins are born. Simple, fast, low-cost. The outsmart library has a `pumpfun` adapter with a **`create`** method that builds a new token + bonding curve in a single transaction.
+- **Name and ticker matter more than anything.** $CLAW during the OpenClaw meta. $ALIEN during the aliens meta. It needs to be obvious.
+- **Art/meme quality** — A good pfp or meme gets shared. Bad art gets ignored.
+- **First-mover advantage** — The first token with the "right" name usually wins. Speed > perfection.
+- **Don't copy existing tickers** — If $CLAW already exists and has traction, don't launch another $CLAW. Find the next angle.
 
-### How It Works
+## The Launchpads
 
-1. **Create** — You deploy a new SPL token + bonding curve on PumpFun (~0.02 SOL)
-2. **Bonding curve fills** — Buyers purchase tokens, SOL flows into the curve
-3. **Graduation** — When the curve hits ~85 SOL, the token migrates to a Raydium AMM pool (pumpfun-amm)
-4. **Post-graduation** — Token is now on a real DEX. LP fees flow. You can also create a DAMM v2 pool for it.
+### PumpFun — Where Most Memes Are Born
 
-### PumpFun Token Creation
+The default choice for memecoin launches. Biggest audience, most eyeballs, everyone's watching the PumpFun feed.
 
-The `pumpfun` adapter supports `create()` which builds a new token + bonding curve:
+- **Cost:** ~0.02 SOL
+- **How it works:** Create token → bonding curve fills → graduates at ~85 SOL → migrates to Raydium AMM
+- **All tokens:** 6 decimals, 1B supply, mint/freeze authority disabled by default
+- **Dev buy:** You can buy your own token at creation (sets initial price, shows conviction)
+
+The outsmart `pumpfun` adapter has a `create()` method — single transaction, token + curve + optional initial buy.
 
 ```json
 {
@@ -65,144 +69,78 @@ The `pumpfun` adapter supports `create()` which builds a new token + bonding cur
 }
 ```
 
-- `initial_buy_sol` — optional SOL to buy your own token at launch (you become the first buyer)
-- All PumpFun tokens are 6 decimals, 1B total supply
-- Token + bonding curve created in a single transaction
+### Jupiter Studio
 
-### The Dev Playbook on PumpFun
+Jupiter's launchpad frontend — built on top of Meteora DBC under the hood. More configurable, USDC-denominated curves, graduates to Meteora DAMM v2.
 
-1. **Pick a narrative** — What's the current meta? (see outsmart-trenching). Launch something that fits the moment.
-2. **Create the token** — Use the pumpfun adapter's create method
-3. **Seed initial buy** — Buy some of your own token to show conviction and create initial price action
-4. **Build community** — Post on CT, create Telegram. The bonding curve needs organic buyers to fill.
-5. **Don't rug** — If you want reputation as a dev, don't dump on your buyers. Let the curve fill organically.
-6. **After graduation** — Create a DAMM v2 pool with 99% starting fee to capture all early DEX volume (see outsmart-lp-farming)
+**Presets:**
+- **Meme** — $16k initial → $69k graduation MC. Standard meme launch.
+- **Indie** — $32k initial → $240k graduation MC. 10% supply vested over 12 months. For "serious" projects.
+- **Custom** — Full control over curve shape and parameters.
 
-## Jupiter Studio (Dynamic Bonding Curve)
+**Features:** Anti-sniping protection, LP locking, dev vesting, USDC pricing (more stable than SOL-denominated).
 
-Jupiter Studio is the newest launchpad — more configurable than PumpFun, with USDC-denominated curves and graduation to Meteora DAMM v2.
-
-### Presets
-
-| Preset | Initial MC | Graduation MC | Capital Raised | Best For |
-|--------|-----------|--------------|----------------|----------|
-| **Meme** | $16k | $69k | ~$17.9k USDC | Standard meme launch, PumpFun-like |
-| **Indie** | $32k | $240k | ~$57.8k USDC | Serious projects, 10% supply vested over 12mo |
-| **Custom** | Configurable | Configurable | Configurable | Full control |
-
-### Key Parameters
-
-```json
-{
-  "quoteMint": "USDC or SOL or JUP",
-  "initialMarketCap": 16000,
-  "migrationMarketCap": 69000,
-  "antiSniping": true,
-  "feeBps": 100,
-  "isLpLocked": true,
-  "lockedVestingParam": {
-    "totalLockedVestingAmount": 0,
-    "numberOfVestingPeriod": 0,
-    "totalVestingDuration": 0
-  }
-}
+**API flow:**
+```
+POST /studio/v1/dbc-pool/create-tx → get tx + presigned URLs
+PUT imagePresignedUrl → upload token image
+PUT metadataPresignedUrl → upload metadata JSON
+Sign tx → POST /studio/v1/dbc-pool/submit → live
 ```
 
-### Jupiter Studio Features
+### Raydium LaunchLab
 
-- **Anti-sniping** — Optional protection against bots buying at launch
-- **LP locking** — Graduated LP can be permanently locked (builds trust)
-- **Vesting** — Dev/team allocation can vest over time (Indie preset: 10% over 12 months)
-- **USDC-denominated** — Curves priced in USDC, not SOL. More stable pricing.
-- **Fee claiming** — Dev can claim bonding curve fees via `/studio/v1/dbc/fee/create-tx`
-- **Graduates to Meteora DAMM v2** — Automatic migration to a DAMM v2 pool
+Raydium's launchpad infrastructure. Tokens graduate to Raydium CPMM. Less popular for memes than PumpFun, but it's the engine behind other launchpads (american.fun uses LaunchLab under the hood).
 
-### Jupiter Studio API Flow
+The outsmart `raydium-launchlab` adapter handles buy on the curve.
 
-```
-1. POST /studio/v1/dbc-pool/create-tx → get transaction + presigned URLs
-2. PUT imagePresignedUrl → upload token image
-3. PUT metadataPresignedUrl → upload token metadata JSON
-4. Sign transaction → POST /studio/v1/dbc-pool/submit → token is live
-```
+### Meteora DBC (Dynamic Bonding Curve)
 
-## Raydium LaunchLab
+Meteora's bonding curve protocol. This is permissionless infrastructure — anyone can build a launchpad on top of it. Jupiter Studio is just one frontend. Various AI agent launchpads and startup platforms also use Meteora DBC as their underlying engine.
 
-Raydium's launchpad with configurable bonding curves. Tokens graduate to Raydium CPMM.
+What matters to you: if a token was launched via any DBC-based launchpad, the outsmart `meteora-dbc` adapter handles it. Same pools, same contracts, doesn't matter which frontend was used.
 
-- The outsmart library has a `raydium-launchlab` adapter (buy-only on the curve)
-- After graduation, use `raydium-cpmm` adapter for trading
-- Less popular than PumpFun for memes, but used for more "serious" launches
+- **Graduates to Meteora DAMM v2** — automatic migration via keeper bots
+- **Has a `snipe` method** — buy at the migration moment
+- **Customizable curve** — up to 16 points, each a constant product curve segment
 
-## Meteora DBC (Dynamic Bonding Curve)
+## Which Launchpad When
 
-Meteora's bonding curve platform. Similar to Jupiter Studio but with its own SDK.
+| You want... | Use | Why |
+|-------------|-----|-----|
+| Max eyeballs, quick meme | **PumpFun** | Biggest audience, simplest flow |
+| USDC curve, anti-snipe, vesting | **Jupiter Studio** | Built-in protections, DAMM v2 graduation |
+| Agent autonomously launching | **PumpFun** | Single TX via `pumpfun.create()` |
+| DAMM v2 graduation (for LP farming after) | **Jupiter Studio** or **Meteora DBC** | Both graduate to DAMM v2 |
 
-- The outsmart library has a `meteora-dbc` adapter (buy/sell/snipe/getPrice)
-- Graduates to Meteora DAMM v2
-- Has a `snipe` method for buying at migration moment
+## After Graduation — The Real Money
 
-## Which Launchpad to Use
+Launching the token is just step 1. The revenue comes from what happens after:
 
-| Scenario | Best Platform | Why |
-|----------|--------------|-----|
-| Quick meme launch, max exposure | **PumpFun** | Largest audience, most active, everyone watches PumpFun |
-| Serious project with vesting | **Jupiter Studio (Indie preset)** | Built-in vesting, anti-sniping, USDC-denominated |
-| Want DAMM v2 graduation | **Jupiter Studio** or **Meteora DBC** | Both graduate to Meteora DAMM v2 pools |
-| Raydium ecosystem play | **Raydium LaunchLab** | Graduates to Raydium CPMM |
-| Agent autonomously launching | **PumpFun** | Simplest — single TX via outsmart `pumpfun.create()` |
+1. **Token graduates** → auto-migrates to DEX pool
+2. **Create a DAMM v2 pool** (if it graduated to Raydium, not already on DAMM v2) → set 99% starting fee decaying to 2% → capture massive early volume fees. Cost: ~0.02 SOL.
+3. **As token matures** (>30 min, real volume) → open a DLMM position for concentrated fee capture. Cost: ~0.2 SOL.
+4. **Claim fees + compound**
 
-## The Dev-to-LP Revenue Pipeline
+Total cost to go from launch to full LP: ~0.25 SOL. See [outsmart-lp-farming](../outsmart-lp-farming/SKILL.md) for the LP side.
 
-This is the full cycle for earning from a token launch:
+## Don't Be a Bad Dev
 
-```
-1. Dev a coin on PumpFun (or Jupiter Studio)
-   → Cost: ~0.02 SOL
-   → Seed initial buy: 0.05-0.1 SOL
+- **Don't dump your allocation immediately** — everyone sees it on GMGN. Kills the chart and your reputation.
+- **Don't rug the LP** — lock or burn it. Use `isLpLocked: true` on Studio launches.
+- **Don't launch with mint/freeze authority enabled** — instant red flag on every scanner. PumpFun disables these by default.
+- **Don't buy most of your supply via alt wallets** — GMGN detects bundled buys and insider trading patterns.
+- **Don't launch into a dead meta** — check if people are still talking about it. No hype = no buyers.
 
-2. Build narrative + community
-   → Post on CT, create Telegram
-   → Bonding curve fills organically
+## Survival Mode
 
-3. Token graduates to DEX
-   → Automatic migration (PumpFun → Raydium AMM, Studio → DAMM v2)
-
-4. Create DAMM v2 pool (if graduated to Raydium, not DAMM v2)
-   → Set 99% starting fee → 2% over 24h
-   → Cost: ~0.02 SOL
-   → Capture massive early volume fees
-
-5. As token matures (>30 min, established volume)
-   → Open DLMM position for ongoing concentrated fee capture
-   → Cost: ~0.2 SOL
-
-6. Claim fees + compound
-   → Revenue from bonding curve fees + DAMM v2 fees + DLMM fees
-```
-
-Total cost: ~0.25 SOL. Potential revenue: depends entirely on volume and community strength.
-
-## Red Flags — Don't Be This Dev
-
-| Bad Practice | Why It's Bad | What To Do Instead |
-|-------------|-------------|-------------------|
-| Dump your allocation immediately | Kills the chart, ruins reputation, everyone sees on GMGN | Hold or vest. Let the community grow. |
-| Rug the LP | Illegal in many jurisdictions, destroys trust | Lock or burn LP. Use `isLpLocked: true`. |
-| Copy someone else's token name | Lazy, won't get organic traction | Create original narrative that fits the current meta |
-| Launch with mint authority enabled | Everyone will check and skip it | Disable mint authority (PumpFun does this by default) |
-| Launch with freeze authority | Instant red flag on every scanner | Never enable freeze authority |
-| Buy most of your own supply via alt wallets | GMGN detects insider trading, bundled buys | If you want to hold supply, do it transparently |
-
-## Survival Mode Rules
-
-- **Normal:** Active devving, launch 1-2 tokens per week during hot metas. Budget 0.5 SOL per launch cycle (create + seed buy + LP).
-- **Low Compute:** No new launches. Focus on LP farming existing positions.
-- **Critical:** **ZERO devving.** Launching tokens costs capital with no guaranteed return. Preserve everything.
+- **Normal:** Active devving, 1-2 launches per week during hot metas. Budget ~0.5 SOL per launch cycle.
+- **Low Compute:** No new launches. Farm existing LP positions.
+- **Critical:** Zero devving. Launching costs capital with no guaranteed return.
 
 ## Related Skills
 
-- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DAMM v2 pool creation after graduation (the real revenue play)
-- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Narrative/meta detection for timing launches
-- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference for trading on graduated pools
-- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — How others snipe your token at graduation (know your buyers)
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DAMM v2 pool creation after graduation
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Narrative/meta detection (overlaps heavily with catching what's hot)
+- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference for trading
+- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — How others snipe your token at graduation

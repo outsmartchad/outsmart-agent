@@ -9,315 +9,187 @@ metadata:
   version: '2.0.0'
 ---
 
-# Solana Trading
+# Solana DEX Trading
 
-Execute trades, manage liquidity, and query market data across 18 Solana DEX protocols via the outsmart MCP server.
+This is your tool reference. 10 MCP tools, 18 DEX adapters, and the patterns for using them.
 
-## Quick Decision Guide
+## Tools at a Glance
 
-| Goal | MCP Tool | Key Params |
-|------|----------|------------|
-| Buy tokens with SOL | `solana_buy` | `dex`, `pool` or `token`, `amount` |
-| Sell tokens for SOL | `solana_sell` | `dex`, `pool` or `token`, `percentage` |
-| Check on-chain price | `solana_quote` | `dex`, `pool` |
-| Add liquidity | `solana_add_liquidity` | `dex`, `pool`, `amount_sol` |
-| Remove liquidity | `solana_remove_liquidity` | `dex`, `pool`, `percentage` |
-| Claim LP fees | `solana_claim_fees` | `dex`, `pool` |
-| List LP positions | `solana_list_positions` | `dex`, `pool` |
-| Get token market data | `solana_token_info` | `token` |
-| List available DEXes | `solana_list_dexes` | |
-| Check wallet balance | `solana_wallet_balance` | |
+| Tool | What It Does | Key Params |
+|------|-------------|------------|
+| `solana_buy` | Buy tokens with SOL | `dex`, `pool` or `token`, `amount` |
+| `solana_sell` | Sell tokens for SOL | `dex`, `pool` or `token`, `percentage` |
+| `solana_quote` | On-chain price check | `dex`, `pool` |
+| `solana_add_liquidity` | Deposit into a pool | `dex`, `pool`, `amount_sol` |
+| `solana_remove_liquidity` | Withdraw from a pool | `dex`, `pool`, `percentage` |
+| `solana_claim_fees` | Collect LP fees | `dex`, `pool` |
+| `solana_list_positions` | See your LP positions | `dex`, `pool` |
+| `solana_token_info` | DexScreener market data | `token` |
+| `solana_list_dexes` | All 18 adapters + capabilities | |
+| `solana_wallet_balance` | SOL and token balances | |
 
-## DEX Selection Guide
+## Picking the Right DEX
 
-### When to use which DEX
+**If you just want the best price**, use `jupiter-ultra`. It routes across everything.
 
-| Scenario | Recommended DEX | Why |
-|----------|----------------|-----|
-| Best price across all DEXes | `jupiter-ultra` | Aggregates routes across all Solana DEXes |
-| Specific pool on Raydium | `raydium-cpmm`, `raydium-clmm`, or `raydium-amm-v4` | Direct on-chain execution, no API dependency |
-| Meteora concentrated LP | `meteora-dlmm` | DLMM bins for precise price ranges |
-| Meteora standard LP | `meteora-damm-v2` | Full LP lifecycle (add/remove/claim) |
-| PumpFun tokens (bonding curve) | `pumpfun-amm` | Graduated PumpFun tokens on Raydium AMM |
-| Raydium Launchlab tokens | `raydium-launchlab` | Bonding curve tokens before migration |
+**If you need a specific pool** (LP, specific liquidity, on-chain execution), use the adapter for that pool's protocol.
+
+| Situation | Use | Why |
+|-----------|-----|-----|
+| General trading, best execution | `jupiter-ultra` | Aggregates all DEXes, no pool address needed |
+| LP on Meteora concentrated bins | `meteora-dlmm` | DLMM-specific position management |
+| LP on Meteora full-range | `meteora-damm-v2` | Full LP lifecycle |
+| Raydium pools | `raydium-cpmm` / `raydium-clmm` / `raydium-amm-v4` | Direct on-chain, match the pool type |
+| PumpFun graduated tokens | `pumpfun-amm` | Raydium AMM pools from PumpFun |
+| PumpFun bonding curve | `pumpfun` | Pre-graduation, includes `create()` |
 | Orca Whirlpools | `orca` | Concentrated liquidity on Orca |
-| Token is unknown / new | Use `solana_token_info` first | Check liquidity, age, and market data before trading |
+| Unknown token | Check `solana_token_info` first | Know what you're buying |
 
-### DEX Categories
+### Two Categories
 
-**Swap Aggregators** (require `token`, NOT `pool`):
-- `jupiter-ultra` — Best for general trading, aggregates across all DEXes
-- `dflow` — Intent-based routing
+**Aggregators** need `token` (mint address), NOT `pool`:
+- `jupiter-ultra`, `dflow`
 
-**On-Chain DEX Adapters** (require `pool`, token auto-detected):
-- `raydium-amm-v4` — Classic Raydium AMM
-- `raydium-cpmm` — Raydium constant product market maker
-- `raydium-clmm` — Raydium concentrated liquidity
-- `raydium-launchlab` — Raydium token launch bonding curves
-- `meteora-damm-v2` — Meteora Dynamic AMM v2 (full LP support)
-- `meteora-dlmm` — Meteora Discrete Liquidity Market Maker
-- `pumpfun-amm` — PumpFun graduated tokens
-- `orca` — Orca Whirlpools
-- And more (use `solana_list_dexes` to see all)
+**On-chain adapters** need `pool` (pool address), token is auto-detected:
+- Everything else (raydium-*, meteora-*, pumpfun-*, orca, etc.)
 
-## MCP Tool Reference
+Run `solana_list_dexes` to see all 18 and what each supports.
+
+## Tool Details
 
 ### solana_buy
 
-Buy tokens with SOL on a specific DEX.
-
-**For aggregators** (jupiter-ultra, dflow):
 ```json
-{
-  "dex": "jupiter-ultra",
-  "token": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  "amount": 0.1
-}
+// Aggregator — just need the mint
+{ "dex": "jupiter-ultra", "token": "MINT_ADDRESS", "amount": 0.1 }
+
+// On-chain — need the pool
+{ "dex": "raydium-cpmm", "pool": "POOL_ADDRESS", "amount": 0.1 }
 ```
 
-**For on-chain DEXes** (raydium, meteora, orca, etc.):
-```json
-{
-  "dex": "raydium-cpmm",
-  "pool": "POOL_ADDRESS",
-  "amount": 0.1
-}
-```
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `dex` | Yes | DEX adapter name |
-| `pool` | For on-chain DEXes | Pool address (base58) |
-| `token` | For aggregators | Token mint address (base58) |
-| `amount` | Yes | Amount of SOL to spend |
-| `slippage_bps` | No | Slippage tolerance in basis points (default: 300 = 3%) |
-| `tip_sol` | No | MEV tip in SOL for competitive execution |
-| `dry_run` | No | Simulate without sending (default: false) |
+| Param | Required | Notes |
+|-------|----------|-------|
+| `dex` | Yes | Adapter name |
+| `pool` | On-chain DEXes | Pool address |
+| `token` | Aggregators | Token mint |
+| `amount` | Yes | SOL to spend |
+| `slippage_bps` | No | Default 300 (3%) |
+| `tip_sol` | No | Jito MEV tip |
+| `dry_run` | No | Simulate only |
 
 ### solana_sell
 
-Sell tokens for SOL.
-
 ```json
-{
-  "dex": "raydium-cpmm",
-  "pool": "POOL_ADDRESS",
-  "percentage": 100
-}
+{ "dex": "jupiter-ultra", "token": "MINT_ADDRESS", "percentage": 100 }
 ```
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `dex` | Yes | DEX adapter name |
-| `pool` | For on-chain DEXes | Pool address |
-| `token` | For aggregators | Token mint address |
-| `percentage` | Yes | Percentage of holdings to sell (0-100) |
-| `slippage_bps` | No | Slippage tolerance in basis points |
-| `dry_run` | No | Simulate without sending |
+Same params as buy, but `percentage` (0-100) instead of `amount`.
 
 ### solana_quote
 
-Get on-chain price from a pool.
-
 ```json
-{
-  "dex": "raydium-cpmm",
-  "pool": "POOL_ADDRESS"
-}
+{ "dex": "raydium-cpmm", "pool": "POOL_ADDRESS" }
 ```
 
-Returns: price, base/quote mints, pool address, timestamp.
+Returns price, base/quote mints, timestamp.
 
 ### solana_add_liquidity
 
-Add liquidity to a pool.
-
 ```json
-{
-  "dex": "meteora-dlmm",
-  "pool": "POOL_ADDRESS",
-  "amount_sol": 0.1,
-  "strategy": "spot",
-  "bins": 50
-}
+{ "dex": "meteora-dlmm", "pool": "POOL", "amount_sol": 0.5, "strategy": "spot", "bins": 50 }
 ```
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `dex` | Yes | DEX adapter name |
-| `pool` | Yes | Pool address |
-| `amount_sol` | No | SOL to deposit |
-| `amount_token` | No | Token to deposit |
-| `strategy` | No | Distribution: "spot", "curve", or "bid-ask" (DLMM only) |
-| `bins` | No | Number of bins (DLMM only, default: 50, max: 70) |
+| Param | Notes |
+|-------|-------|
+| `amount_sol` / `amount_token` | At least one required |
+| `strategy` | DLMM only: "spot", "curve", "bid-ask" |
+| `bins` | DLMM only: default 50, max 69 |
 
 ### solana_remove_liquidity
 
-Remove liquidity from a pool.
-
 ```json
-{
-  "dex": "meteora-dlmm",
-  "pool": "POOL_ADDRESS",
-  "percentage": 100
-}
+{ "dex": "meteora-dlmm", "pool": "POOL", "percentage": 100 }
 ```
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `dex` | Yes | DEX adapter name |
-| `pool` | Yes | Pool address |
-| `percentage` | Yes | Percentage to remove (0-100) |
-| `position_address` | No | Specific position (if multiple) |
+100% on DLMM auto-claims fees and closes the position. 100% on DAMM v2 closes the position NFT.
 
-### solana_claim_fees
-
-Claim accumulated swap fees from LP positions.
+### solana_claim_fees / solana_list_positions
 
 ```json
-{
-  "dex": "meteora-dlmm",
-  "pool": "POOL_ADDRESS"
-}
+{ "dex": "meteora-dlmm", "pool": "POOL" }
 ```
 
-### solana_list_positions
-
-List user's LP positions in a pool.
-
-```json
-{
-  "dex": "meteora-dlmm",
-  "pool": "POOL_ADDRESS"
-}
-```
-
-Returns: position addresses, token amounts, fee balances, in-range status.
+`list_positions` returns: position addresses, token amounts, fees, in-range status.
 
 ### solana_token_info
 
-Get market data from DexScreener.
-
 ```json
-{
-  "token": "TOKEN_MINT_ADDRESS"
-}
+{ "token": "MINT_ADDRESS" }
 ```
 
-Returns: name, price, market cap, volume (5m/1h/6h/24h), buyers, liquidity, age, social links.
-
-### solana_list_dexes
-
-List all available DEX adapters and their capabilities.
-
-```json
-{}
-```
-
-Optional filter:
-```json
-{
-  "capability": "canAddLiquidity"
-}
-```
+Returns from DexScreener: name, price, mcap, volume (5m/1h/6h/24h), buyers, liquidity, age, socials.
 
 ### solana_wallet_balance
 
-Check SOL and token balances.
-
 ```json
 {}
+// or for a specific token:
+{ "token_mint": "MINT_ADDRESS" }
 ```
 
-For a specific token:
-```json
-{
-  "token_mint": "TOKEN_MINT_ADDRESS"
-}
-```
+## Common Patterns
 
-## Safety Rules
-
-1. **Always check liquidity first.** Before buying a token, use `solana_token_info` to check liquidity depth. Low liquidity means high slippage and potential rug risk.
-
-2. **Use dry_run for large trades.** Set `dry_run: true` to simulate the trade and check for errors before committing SOL.
-
-3. **Start with small amounts.** When trading an unfamiliar token, start with a small test buy (0.01 SOL) to verify the pool works correctly.
-
-4. **Check token age.** Tokens less than 1 hour old are extremely high risk. Use `solana_token_info` to check `pairAge`.
-
-5. **Prefer aggregators for best price.** Use `jupiter-ultra` for the best price across all DEXes. Only use on-chain adapters when you need a specific pool.
-
-6. **Monitor LP positions.** After adding liquidity, regularly check positions with `solana_list_positions` and claim fees with `solana_claim_fees`.
-
-7. **Never trade more than you can afford to lose.** Solana memecoins are extremely volatile. Most go to zero.
-
-8. **Check volume and buyers.** Healthy tokens have consistent buy/sell activity. If `buyers5m` is 0 but `volume5m` is high, it may be wash trading.
-
-## Common Workflows
-
-### Buy a Token
-
-With an aggregator (simplest — no pool address needed):
+**Buy a token safely:**
 ```
 1. solana_token_info(token) → check liquidity, age, volume
 2. solana_buy(dex="jupiter-ultra", token, amount, dry_run=true) → simulate
 3. solana_buy(dex="jupiter-ultra", token, amount) → execute
 ```
 
-With an on-chain DEX (need pool address from DexScreener or other source):
+**Provide liquidity:**
 ```
-1. solana_token_info(token) → check liquidity, get pool address
-2. solana_buy(dex, pool, amount, dry_run=true) → simulate
-3. solana_buy(dex, pool, amount) → execute
-```
-
-### Provide Liquidity
-
-```
-1. solana_quote(dex, pool) → check current price
-2. solana_add_liquidity(dex, pool, amount_sol, strategy="spot") → add LP
-3. solana_list_positions(dex, pool) → verify position
+1. solana_quote(dex, pool) → current price
+2. solana_add_liquidity(dex, pool, amount_sol, strategy, bins)
+3. solana_list_positions(dex, pool) → verify
 ```
 
-### Exit LP Position
-
+**Exit LP:**
 ```
-1. solana_list_positions(dex, pool) → check positions
-2. solana_claim_fees(dex, pool) → collect fees first
-3. solana_remove_liquidity(dex, pool, percentage=100) → withdraw
+1. solana_claim_fees(dex, pool) → collect first
+2. solana_remove_liquidity(dex, pool, percentage=100) → withdraw
 ```
 
-### Sell Everything
+## Safety
 
-```
-1. solana_sell(dex, pool, percentage=100) → sell all holdings
-```
+- **Always check `solana_token_info` before buying anything unfamiliar.** Look at liquidity, age, and buyer count.
+- **Use `dry_run: true` for large trades.** Catches errors before you commit SOL.
+- **Start small.** 0.01 SOL test buy on unknown tokens.
+- **Use jupiter-ultra for best price.** Only use on-chain adapters when you specifically need that pool.
+- **Watch for wash trading.** High volume + low buyer count = fake activity.
+- **Most memecoins go to zero.** Size accordingly.
 
-## Environment Variables
-
-The MCP server requires these env vars to be set:
+## Environment
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `PRIVATE_KEY` | Yes | Base58-encoded Solana private key |
-| `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint (Helius, Triton, etc.) |
-| `JUPITER_API_KEY` | No | Required for jupiter-ultra adapter |
-| `DFLOW_API_KEY` | No | Required for dflow adapter |
+| `PRIVATE_KEY` | Yes | Base58 Solana private key |
+| `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint |
+| `JUPITER_API_KEY` | No | For jupiter-ultra |
+| `DFLOW_API_KEY` | No | For dflow |
 
-Config file: `~/.outsmart/config.env`
+Config: `~/.outsmart/config.env`
 
-## Survival Mode Rules
+## Survival Mode
 
-- **Normal (>$0.50 credits):** All tools active, full trading capability
-- **Low Compute (>$0.10):** Reduce trade frequency, prefer LP farming over active trading
-- **Critical (>$0.00):** Liquidate all positions, convert to USDC, top up compute credits immediately
+- **Normal:** All tools active, full trading
+- **Low Compute:** Reduce trade frequency, prefer LP farming
+- **Critical:** Liquidate everything, convert to USDC, top up compute credits
 
 ## Related Skills
 
-- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — Deep DLMM/DAMM v2 LP mechanics, pool creation, rebalancing
-- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Memecoin trading with narrative/meta detection
-- **[outsmart-dca-grid](../outsmart-dca-grid/SKILL.md)** — Jupiter Recurring DCA + DLMM grid strategies
-- **[outsmart-prediction-markets](../outsmart-prediction-markets/SKILL.md)** — Jupiter Prediction + Polymarket + Futarchy
-- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — Evaluating new token launches for early entry
-- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Autonomous capital management and survival tiers
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DLMM/DAMM v2 LP mechanics
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Memecoin trading
+- **[outsmart-dca-grid](../outsmart-dca-grid/SKILL.md)** — DCA + grid strategies
+- **[outsmart-prediction-markets](../outsmart-prediction-markets/SKILL.md)** — Event betting
+- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — Early entry on new launches
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital management
