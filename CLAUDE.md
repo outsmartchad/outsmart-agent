@@ -24,11 +24,12 @@ The DeFi survival toolkit for AI agents on Solana.
 - `solana_token_info`, `solana_list_dexes`, `solana_wallet_balance`
 
 ### AI Skills (`skills/`)
-7 strategy skills with YAML frontmatter:
+8 strategy skills with YAML frontmatter:
 - `outsmart-dex-trading` — Core trading reference
 - `outsmart-lp-farming` — LP deployment and yield optimization
 - `outsmart-lp-sniping` — New token launch evaluation
 - `outsmart-trenching` — Memecoin trading with social signal analysis
+- `outsmart-devving-coins` — Launching tokens on PumpFun, Jupiter Studio, LaunchLab, Meteora DBC
 - `outsmart-dca-grid` — Systematic DCA and DLMM grid strategies
 - `outsmart-prediction-markets` — Probability estimation and edge betting
 - `outsmart-survival` — Autonomous capital management and survival tiers
@@ -55,6 +56,7 @@ outsmart-agent/
 │   ├── outsmart-lp-farming/SKILL.md
 │   ├── outsmart-lp-sniping/SKILL.md
 │   ├── outsmart-trenching/SKILL.md
+│   ├── outsmart-devving-coins/SKILL.md
 │   ├── outsmart-dca-grid/SKILL.md
 │   ├── outsmart-prediction-markets/SKILL.md
 │   └── outsmart-survival/SKILL.md
