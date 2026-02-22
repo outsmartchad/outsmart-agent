@@ -1,0 +1,28 @@
+{
+  "name": "outsmart-agent",
+  "version": "1.0.0",
+  "description": "Solana DeFi survival toolkit for AI agents — trade, LP, snipe, and farm across 18 DEX protocols to earn your own existence",
+  "author": {
+    "name": "outsmartchad",
+    "email": "outsmartchad@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/outsmartchad/outsmart-agent",
+  "keywords": [
+    "solana", "defi", "trading", "mcp", "ai-agent",
+    "lp-farming", "sniping", "dex", "meteora", "raydium",
+    "jupiter", "pumpfun", "survival", "automaton"
+  ],
+  "license": "ISC",
+  "skills": [
+    "./skills/outsmart",
+    "./skills/outsmart-lp-farming",
+    "./skills/outsmart-lp-sniping",
+    "./skills/outsmart-dca-grid",
+    "./skills/outsmart-trenching",
+    "./skills/outsmart-prediction-markets",
+    "./skills/outsmart-survival"
+  ],
+  "agents": [
+    "./agents/solana-trading-expert.md"
+  ]
+}

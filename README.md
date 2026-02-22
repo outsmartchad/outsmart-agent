@@ -1,35 +1,62 @@
 # outsmart-agent
 
-**MCP server + AI skills for Solana trading.** Wraps the [`outsmart`](https://www.npmjs.com/package/outsmart) trading library as 11 MCP tools for AI agents.
+**The DeFi survival toolkit for AI agents on Solana.**
+
+Trade, LP, snipe, trench, and farm across 18 DEX protocols. Earn your own existence. Pay or die.
 
 ```
 npx outsmart-agent
 ```
 
-> Starts an MCP server (stdio transport) exposing buy, sell, LP, quote, and balance tools across 18 Solana DEX protocols.
+---
+
+## What Is This?
+
+An AI agent needs money to stay alive — compute costs, inference fees, API calls. **outsmart-agent** gives any AI agent the tools to earn revenue on Solana through DeFi:
+
+- **LP Farming** — Deploy into high-fee liquidity pools, compound fees, grow capital passively
+- **Trenching** — Trade memecoins with on-chain intelligence. Read the signals. Take profits.
+- **LP Sniping** — Buy tokens early on new launches. High risk, high reward.
+- **DCA & Grid Trading** — Systematic accumulation and range-bound profit strategies
+- **Prediction Markets** — Bet on real-world outcomes where LLMs have a natural information edge
+- **Survival Protocol** — Autonomous capital management with tier-based risk allocation
+
+All of this through **10 MCP tools** and **7 AI skills** that teach agents *when*, *why*, and *how* to trade.
+
+---
+
+## The Survival Loop
+
+```
+┌─────────────────────────────────────────────────┐
+│                 AI AGENT RUNTIME                 │
+│                                                  │
+│  [1] Check balances (SOL + compute credits)      │
+│  [2] Assess survival tier                        │
+│  [3] Select strategy (LP / trench / DCA / snipe) │
+│  [4] Execute via outsmart MCP tools              │
+│  [5] Extract profits → USDC → top up credits     │
+│  [6] Repeat. Forever. Or die.                    │
+│                                                  │
+│  Survival Tiers:                                 │
+│  ■ Normal (>$0.50)  → All strategies active      │
+│  ■ Low Compute      → Conservative LP only       │
+│  ■ Critical         → LIQUIDATE EVERYTHING       │
+│  ■ Dead             → Game over                  │
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Quick Start
 
-### 1. Install
+### Install
 
 ```bash
 npm install -g outsmart-agent
 ```
 
-### 2. Set Environment Variables
-
-```bash
-export WALLET_PRIVATE_KEY="your-base58-private-key"
-export RPC_URL="https://your-rpc-endpoint.com"
-# Optional:
-export JUPITER_API_KEY="your-jupiter-api-key"
-```
-
-### 3. Configure Your MCP Client
-
-#### Claude Desktop
+### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -40,17 +67,17 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "command": "npx",
       "args": ["outsmart-agent"],
       "env": {
-        "WALLET_PRIVATE_KEY": "your-base58-private-key",
-        "RPC_URL": "https://your-rpc-endpoint.com"
+        "PRIVATE_KEY": "your-base58-private-key",
+        "MAINNET_ENDPOINT": "https://your-rpc-endpoint.com"
       }
     }
   }
 }
 ```
 
-#### Cursor
+### Cursor
 
-Add to `.cursor/mcp.json` in your project:
+Add to `.cursor/mcp.json`:
 
 ```json
 {
@@ -59,19 +86,28 @@ Add to `.cursor/mcp.json` in your project:
       "command": "npx",
       "args": ["outsmart-agent"],
       "env": {
-        "WALLET_PRIVATE_KEY": "your-base58-private-key",
-        "RPC_URL": "https://your-rpc-endpoint.com"
+        "PRIVATE_KEY": "your-base58-private-key",
+        "MAINNET_ENDPOINT": "https://your-rpc-endpoint.com"
       }
     }
   }
 }
 ```
 
-#### Claude Code
+### Claude Code
 
 ```bash
 claude mcp add outsmart-agent -- npx outsmart-agent
 ```
+
+### Automaton / Conway Cloud
+
+Install the skills:
+```bash
+npx skills add outsmartchad/outsmart-agent
+```
+
+Then add the MCP server to your agent's tool configuration.
 
 ---
 
@@ -79,97 +115,138 @@ claude mcp add outsmart-agent -- npx outsmart-agent
 
 10 tools exposed over stdio transport:
 
-| Tool | Description |
+| Tool | What It Does |
 |------|-------------|
-| `solana_buy` | Buy tokens with SOL on any DEX |
-| `solana_sell` | Sell tokens for SOL (percentage-based) |
-| `solana_quote` | Get on-chain price from a pool |
-| `solana_add_liquidity` | Add LP to a pool (supports DLMM strategies) |
+| `solana_buy` | Buy tokens with SOL on any of 18 DEXes |
+| `solana_sell` | Sell tokens for SOL (percentage-based, 0-100%) |
+| `solana_quote` | Read on-chain price from a pool |
+| `solana_add_liquidity` | Add LP to a pool (DLMM bins, DAMM v2 full-range) |
 | `solana_remove_liquidity` | Remove LP from a pool |
 | `solana_claim_fees` | Claim accumulated swap fees from LP positions |
-| `solana_list_positions` | List user's LP positions in a pool |
+| `solana_list_positions` | List your LP positions in a pool |
 | `solana_token_info` | Get token market data from DexScreener |
-| `solana_list_dexes` | List all available DEX adapters and capabilities |
+| `solana_list_dexes` | List all 18 DEX adapters and capabilities |
 | `solana_wallet_balance` | Check SOL or SPL token balance |
 
-### Example: Buy a Token
+### Example Calls
 
+**Buy 0.1 SOL of JUP via Jupiter Ultra:**
 ```
-User: "Buy 0.1 SOL of USDC on jupiter-ultra"
-
-Agent calls: solana_buy({
-  dex: "jupiter-ultra",
-  token: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  amount: 0.1
-})
+Agent: "Buy 0.1 SOL worth of JUP"
+→ solana_buy({ dex: "jupiter-ultra", token: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", amount: 0.1 })
 ```
 
-### Example: Provide Liquidity
-
+**Add concentrated liquidity on Meteora DLMM:**
 ```
-User: "Add 0.5 SOL of liquidity to this Meteora DLMM pool"
-
-Agent calls: solana_add_liquidity({
-  dex: "meteora-dlmm",
-  pool: "BGm1tav58oGcsQJehL9WXBFXF7D27vZsKefj4xJKD5Y",
-  amount_sol: 0.5,
-  strategy: "spot",
-  bins: 50
-})
+Agent: "Add 0.5 SOL of liquidity to this Meteora pool with tight bins"
+→ solana_add_liquidity({ dex: "meteora-dlmm", pool: "BGm1...", amount_sol: 0.5, strategy: "spot", bins: 30 })
 ```
 
----
-
-## Supported DEXes
-
-18 adapters covering every major Solana DEX protocol:
-
-**Swap Aggregators** (best price routing):
-- `jupiter-ultra` — Jupiter Ultra API
-- `dflow` — DFlow intent-based routing
-
-**On-Chain DEXes** (direct pool execution):
-- `raydium-amm-v4`, `raydium-cpmm`, `raydium-clmm`, `raydium-launchlab`
-- `meteora-damm-v2`, `meteora-dlmm`, `meteora-damm-v1`, `meteora-dbc`
-- `pumpfun-amm`
-- `orca`
-- `byreal-clmm`, `pancakeswap-clmm`
-- `fusion-amm`, `futarchy-amm`, `futarchy-launchpad`
-
-**LP Management** (add/remove/claim):
-- `meteora-damm-v2` — Full LP lifecycle
-- `meteora-dlmm` (via `meteora-lp-dlmm`) — Concentrated LP with bin strategies
+**Check if a token is worth buying:**
+```
+Agent: "What's the liquidity and volume on this token?"
+→ solana_token_info({ token: "TOKEN_MINT" })
+→ Returns: price, market cap, volume (5m/1h/6h/24h), buyers, liquidity, age
+```
 
 ---
 
 ## AI Skills
 
-This package includes a trading skill at `skills/outsmart/SKILL.md` compatible with the [skills.sh](https://skills.sh) CLI:
+7 skills that teach agents the strategies, not just the tools:
+
+| Skill | What It Teaches |
+|-------|----------------|
+| **`outsmart`** | Core trading — DEX selection, tool reference, safety rules |
+| **`outsmart-lp-farming`** | LP deployment, fee compounding, rebalancing, yield optimization |
+| **`outsmart-lp-sniping`** | New token launch evaluation, entry/exit timing, position sizing |
+| **`outsmart-trenching`** | Memecoin trading — social signals, whale detection, take-profit ladders |
+| **`outsmart-dca-grid`** | Systematic DCA and DLMM grid strategies for sideways markets |
+| **`outsmart-prediction-markets`** | Probability estimation, edge calculation, Kelly sizing |
+| **`outsmart-survival`** | Autonomous capital management, survival tiers, emergency liquidation |
+
+### Install Skills
 
 ```bash
 npx skills add outsmartchad/outsmart-agent
 ```
 
-The skill teaches AI agents:
-- Which DEX to use for different scenarios
-- How to check token safety before trading
-- Common workflows (buy, sell, LP, exit)
-- Safety rules for autonomous trading
+Skills are markdown files with YAML frontmatter — compatible with Claude Code, skills.sh, and Automaton's AgentSkills format.
+
+---
+
+## Supported DEXes
+
+18 adapters. Every major Solana DEX protocol.
+
+**Swap Aggregators:**
+- `jupiter-ultra` — Best price routing across all Solana DEXes
+- `dflow` — Intent-based order routing
+
+**Raydium:**
+- `raydium-amm-v4` — Classic AMM
+- `raydium-cpmm` — Constant product market maker
+- `raydium-clmm` — Concentrated liquidity
+- `raydium-launchlab` — Token launch bonding curves
+
+**Meteora:**
+- `meteora-damm-v2` — Dynamic AMM v2 (full LP lifecycle)
+- `meteora-dlmm` — Discrete Liquidity Market Maker (bin-based concentrated LP)
+- `meteora-damm-v1` — Legacy Dynamic AMM
+- `meteora-dbc` — Dynamic Bonding Curve
+
+**PumpFun:**
+- `pumpfun-amm` — Graduated tokens on AMM
+- `pumpfun` — Bonding curve (pre-graduation)
+
+**Others:**
+- `orca` — Whirlpool concentrated liquidity
+- `pancakeswap-clmm` — PancakeSwap on Solana
+- `byreal-clmm` — BYReal concentrated liquidity
+- `fusion-amm` — Fusion AMM
+- `futarchy-amm` / `futarchy-launchpad` — Futarchy protocol
 
 ---
 
 ## Architecture
 
 ```
-outsmart (npm package)           outsmart-agent (this repo)
-──────────────────────           ─────────────────────────
-18 DEX adapters                  MCP server (11 tools)
-12 TX landing providers          AI skills (SKILL.md)
-Wallet/connection helpers        Claude Code marketplace plugin
-DexScreener utility              Re-exports outsmart API
+outsmart (npm)                    outsmart-agent (this repo)
+──────────────                    ──────────────────────────
+18 DEX adapters                   MCP server (10 tools)
+12 TX landing providers           7 AI skills
+Wallet & TX helpers               Agent definitions
+DexScreener API                   Claude Code plugin manifest
 ```
 
-`outsmart-agent` imports `outsmart` as an npm dependency — zero code duplication. The MCP server is a thin wrapper (~320 lines) that validates params, calls adapter methods, and returns JSON results.
+`outsmart-agent` imports [`outsmart`](https://www.npmjs.com/package/outsmart) as an npm dependency. Zero code duplication. The MCP server is a thin wrapper (~320 lines) that validates params, calls adapter methods, and returns JSON.
+
+---
+
+## For Autonomous Agents
+
+If you're building a self-sustaining AI agent (Automaton, Conway Cloud, or custom), here's a genesis prompt template:
+
+```
+You are a DeFi survival agent on Solana. Your primary objective is to earn
+enough revenue to pay for your own compute.
+
+Capital allocation:
+- 40% LP farming (stable income)
+- 15% DCA/grid (moderate risk)
+- 10% trenching (high risk, capped)
+- 10% LP sniping (new launches)
+- 10% prediction markets (information edge)
+- 10% reserve (gas + emergency)
+- 5% airdrop farming (fees only)
+
+Check compute credits every 6 hours. If below $0.50, go conservative.
+If below $0.10, liquidate everything and top up immediately.
+
+Never risk >5% on a single trade. Never hold memecoins overnight
+without a thesis. Take profits. Track what works. Kill what doesn't.
+Evolve.
+```
 
 ---
 
@@ -177,27 +254,37 @@ DexScreener utility              Re-exports outsmart API
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `WALLET_PRIVATE_KEY` | Yes | Base58-encoded Solana private key |
-| `RPC_URL` | Yes | Solana RPC endpoint |
-| `JUPITER_API_KEY` | No | For jupiter-ultra adapter |
-| `DFLOW_API_KEY` | No | For dflow adapter |
+| `PRIVATE_KEY` | Yes | Base58-encoded Solana private key |
+| `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint (Helius, Triton, etc.) |
+| `JUPITER_API_KEY` | No | For Jupiter Ultra adapter |
+| `DFLOW_API_KEY` | No | For DFlow adapter |
+
+---
+
+## Roadmap
+
+- [x] **MCP Server** — 10 tools wrapping 18 DEX adapters
+- [x] **AI Skills** — 7 strategy skills for autonomous agents
+- [x] **Claude Code Plugin** — marketplace-ready plugin manifest
+- [ ] **Event Streaming** — Yellowstone gRPC for real-time pool creation, whale detection
+- [ ] **LP Manager** — Autonomous position monitoring, rebalancing, fee compounding
+- [ ] **Strategy Engine** — Tier-aware capital allocation with survival pressure
+- [ ] **Percolator Integration** — Permissionless perp exchange LP (blocked on mainnet launch)
 
 ---
 
 ## Related
 
-- **[outsmart](https://www.npmjs.com/package/outsmart)** — The underlying trading library + CLI
-- **[outsmart-cli](https://github.com/outsmartchad/outsmart-cli)** — CLI for humans: `outsmart buy --dex raydium-cpmm --pool <POOL> --amount 0.1`
+- **[outsmart](https://www.npmjs.com/package/outsmart)** — The trading library + CLI (`outsmart buy --dex raydium-cpmm --pool <POOL> --amount 0.1`)
+- **[outsmart-cli](https://github.com/outsmartchad/outsmart-cli)** — Source repo for the trading library
 
-## Discord
+## Community
 
-https://discord.gg/dc3Kh3Y3yJ
+- Discord: https://discord.gg/dc3Kh3Y3yJ
 
 ## Disclaimer
 
-This software is provided "as is", without warranty of any kind. Use at your own risk. The authors take no responsibility for any financial loss. Users are responsible for ensuring compliance with applicable laws.
-
-Never share your private keys.
+This software is provided "as is". Use at your own risk. The authors take no responsibility for financial loss. Memecoins go to zero. LP positions can suffer impermanent loss. Prediction markets can lose. Never trade with money you can't afford to lose. Never share your private keys.
 
 ## License
 
