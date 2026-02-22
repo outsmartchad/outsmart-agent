@@ -2,7 +2,7 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 23 MCP tools wrapping the `outsmart` trading library + Jupiter APIs.
+ * Exposes 32 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
  * DEX Tools (14):
@@ -17,6 +17,11 @@
  *   jupiter_prediction_events, jupiter_prediction_market,
  *   jupiter_prediction_order, jupiter_prediction_positions, jupiter_prediction_claim,
  *   jupiter_dca_create, jupiter_dca_list, jupiter_dca_cancel
+ *
+ * Percolator Perp Tools (9):
+ *   percolator_create_market, percolator_trade, percolator_deposit,
+ *   percolator_withdraw, percolator_market_state, percolator_list_markets,
+ *   percolator_push_price, percolator_crank, percolator_insurance_lp
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -35,6 +40,7 @@ import {
   getSPLTokenBalance,
   getInfoFromDexscreener,
   PumpFunAdapter,
+  PercolatorAdapter,
   type IDexAdapter,
   type DexCapabilities,
 } from "outsmart";
@@ -916,6 +922,255 @@ server.tool(
       });
 
       return ok({ ...executeResult, cancelled: true });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ===========================================================================
+// PERCOLATOR PERPETUAL FUTURES TOOLS (9 tools)
+// ===========================================================================
+
+const percolator = new PercolatorAdapter();
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_create_market
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "percolator_create_market",
+  "Create a new Percolator perpetual futures market. Agent becomes admin/oracle authority. Returns slab address for all subsequent operations.",
+  {
+    collateral_mint: z.string().describe("Collateral token mint address (e.g. BONK, wSOL)"),
+    initial_price_e6: z.string().describe("Initial oracle price in e6 format (1 USD = 1000000). Example: '150000' for $0.15"),
+    lp_collateral: z.string().describe("Initial LP collateral in native token units (e.g. '1000000000' for 1B BONK lamports)"),
+    tier: z.enum(["small", "medium", "large"]).optional().describe("Slab tier: small (256 slots, ~0.44 SOL), medium (1024, ~1.73 SOL), large (4096, ~6.91 SOL). Default: small"),
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const result = await percolator.createMarket({
+        collateralMint: args.collateral_mint,
+        initialPriceE6: BigInt(args.initial_price_e6),
+        lpCollateral: BigInt(args.lp_collateral),
+        tier: args.tier as any,
+        network: args.network as any,
+      });
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_trade
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_trade",
+  "Open, close, or modify a perpetual futures position on a Percolator market. Positive size = long, negative = short. Size is in i128 native token units.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    user_idx: z.number().int().min(0).describe("Your user account index in the slab"),
+    lp_idx: z.number().int().min(0).describe("LP account index to trade against"),
+    size: z.string().describe("Trade size as i128 string. Positive = go long, negative = go short. Use '0' won't work — to close, use opposite size."),
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const sig = await percolator.trade({
+        slabAddress: args.slab,
+        userIdx: args.user_idx,
+        lpIdx: args.lp_idx,
+        size: BigInt(args.size),
+        network: args.network as any,
+      });
+      return ok({ signature: sig });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_deposit
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_deposit",
+  "Deposit collateral into a Percolator market account (user or LP).",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    user_idx: z.number().int().min(0).describe("Account index to deposit into"),
+    amount: z.string().describe("Amount in native token units"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      const sig = await percolator.deposit(args.slab, args.user_idx, BigInt(args.amount), args.network as any);
+      return ok({ signature: sig });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_withdraw
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_withdraw",
+  "Withdraw collateral from a Percolator market account. Only available when position is flat or has sufficient margin.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    user_idx: z.number().int().min(0).describe("Account index to withdraw from"),
+    amount: z.string().describe("Amount in native token units"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      const sig = await percolator.withdraw(args.slab, args.user_idx, BigInt(args.amount), args.network as any);
+      return ok({ signature: sig });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_market_state
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_market_state",
+  "Read the full state of a Percolator perpetual futures market: header, config, engine, risk params, and all accounts.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+  },
+  async (args) => {
+    try {
+      const state = await percolator.getMarketState(args.slab);
+      // Serialize BigInt values for JSON output
+      return ok(JSON.parse(JSON.stringify(state, (_key, value) =>
+        typeof value === "bigint" ? value.toString() : value
+      )));
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_list_markets
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_list_markets",
+  "Discover all Percolator perpetual futures markets on-chain across all program tiers.",
+  {
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const markets = await percolator.discoverMarkets(args.network as any);
+      return ok(JSON.parse(JSON.stringify(markets.map(m => ({
+        slab: m.slabAddress.toBase58(),
+        program: m.programId.toBase58(),
+        admin: m.header.admin.toBase58(),
+        collateralMint: m.config.collateralMint.toBase58(),
+        oraclePrice: m.config.authorityPriceE6.toString(),
+        vault: m.engine.vault.toString(),
+        totalOI: m.engine.totalOpenInterest.toString(),
+        numAccounts: m.engine.numUsedAccounts,
+        maxLeverage: Number(10000n / (m.params.initialMarginBps || 1n)),
+        tradingFeeBps: m.params.tradingFeeBps.toString(),
+        paused: m.header.paused,
+        resolved: m.header.resolved,
+      })), (_key, value) => typeof value === "bigint" ? value.toString() : value)));
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_push_price
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_push_price",
+  "Push a new oracle price to a Percolator market (admin/oracle authority only). Price in e6 format.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    price_e6: z.string().describe("Oracle price in e6 format (1 USD = 1000000)"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      const sig = await percolator.pushOraclePrice(args.slab, BigInt(args.price_e6), args.network as any);
+      return ok({ signature: sig });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_crank
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_crank",
+  "Run the permissionless keeper crank on a Percolator market. Updates funding rates and processes maintenance.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      const sig = await percolator.crank(args.slab, args.network as any);
+      return ok({ signature: sig });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_insurance_lp
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "percolator_insurance_lp",
+  "Manage Percolator insurance fund: create mint, deposit, or withdraw insurance LP tokens.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    action: z.enum(["create_mint", "deposit", "withdraw"]).describe("Action: create_mint (one-time), deposit, or withdraw"),
+    amount: z.string().optional().describe("Amount in native units (required for deposit/withdraw)"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      let sig: string;
+      switch (args.action) {
+        case "create_mint":
+          sig = await percolator.createInsuranceMint(args.slab, args.network as any);
+          break;
+        case "deposit":
+          if (!args.amount) return err("amount is required for deposit");
+          sig = await percolator.depositInsuranceLP(args.slab, BigInt(args.amount), args.network as any);
+          break;
+        case "withdraw":
+          if (!args.amount) return err("amount is required for withdraw");
+          sig = await percolator.withdrawInsuranceLP(args.slab, BigInt(args.amount), args.network as any);
+          break;
+      }
+      return ok({ signature: sig });
     } catch (e: any) {
       return err(e.message);
     }

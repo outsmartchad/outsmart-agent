@@ -4,7 +4,7 @@ The DeFi survival toolkit for AI agents on Solana.
 
 ## Overview
 
-`outsmart-agent` is an MCP server + AI skills package that gives AI agents the ability to trade, LP, snipe, trench, and farm across 18 Solana DEX protocols. It wraps the `outsmart` npm package as a thin MCP layer — zero code duplication.
+`outsmart-agent` is an MCP server + AI skills package that gives AI agents the ability to trade, LP, snipe, trench, operate perp exchanges, and farm across 18 Solana DEX protocols. It wraps the `outsmart` npm package as a thin MCP layer — zero code duplication.
 
 **Target users:** AI agents (Claude Desktop, Cursor, Automaton/Conway Cloud, OpenClaw, any MCP client)
 
@@ -18,7 +18,7 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-23 tools over stdio transport (14 DEX + 9 Jupiter):
+32 tools over stdio transport (14 DEX + 9 Jupiter + 9 Percolator):
 - `solana_buy`, `solana_sell`, `solana_quote`, `solana_snipe`
 - `solana_find_pool`, `solana_create_pool`, `solana_create_token`
 - `solana_add_liquidity`, `solana_remove_liquidity`, `solana_claim_fees`, `solana_list_positions`
@@ -26,9 +26,12 @@ The DeFi survival toolkit for AI agents on Solana.
 - `jupiter_shield`, `jupiter_prediction_events`, `jupiter_prediction_market`
 - `jupiter_prediction_order`, `jupiter_prediction_positions`, `jupiter_prediction_claim`
 - `jupiter_dca_create`, `jupiter_dca_list`, `jupiter_dca_cancel`
+- `percolator_create_market`, `percolator_init_user`, `percolator_deposit`
+- `percolator_withdraw`, `percolator_trade`, `percolator_push_oracle`
+- `percolator_crank`, `percolator_market_state`, `percolator_insurance_lp`
 
 ### AI Skills (`skills/`)
-8 strategy skills with YAML frontmatter:
+9 strategy skills with YAML frontmatter:
 - `outsmart-dex-trading` — Core trading reference
 - `outsmart-lp-farming` — LP deployment and yield optimization
 - `outsmart-lp-sniping` — New token launch evaluation
@@ -37,6 +40,7 @@ The DeFi survival toolkit for AI agents on Solana.
 - `outsmart-dca-grid` — Systematic DCA and DLMM grid strategies
 - `outsmart-prediction-markets` — Probability estimation and edge betting
 - `outsmart-survival` — Autonomous capital management and survival tiers
+- `outsmart-percolator-perps` — Operating perp exchanges, market creation, LP, keeper duties
 
 ### Agent (`agents/`)
 - `solana-trading-expert.md` — Read-only advisory subagent for complex trading decisions
@@ -51,7 +55,7 @@ outsmart-agent/
 ├── src/
 │   ├── index.ts              # Library entry (re-exports from outsmart)
 │   └── mcp/
-│       └── server.ts         # MCP server (23 tools, ~940 lines)
+│       └── server.ts         # MCP server (32 tools)
 ├── skills/
 │   ├── outsmart-dex-trading/
 │   │   ├── SKILL.md          # Core trading skill
@@ -63,7 +67,8 @@ outsmart-agent/
 │   ├── outsmart-devving-coins/SKILL.md
 │   ├── outsmart-dca-grid/SKILL.md
 │   ├── outsmart-prediction-markets/SKILL.md
-│   └── outsmart-survival/SKILL.md
+│   ├── outsmart-survival/SKILL.md
+│   └── outsmart-percolator-perps/SKILL.md
 ├── agents/
 │   └── solana-trading-expert.md
 ├── .claude-plugin/
@@ -101,6 +106,7 @@ Co-authored-by: Claude Code <noreply@anthropic.com>
 | `PRIVATE_KEY` | Yes | Base58 Solana private key |
 | `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint |
 | `JUPITER_API_KEY` | No | Jupiter Ultra, Shield, Prediction, DCA |
+| `DEVNET_ENDPOINT` | No | Solana devnet RPC (Percolator) |
 | `DFLOW_API_KEY` | No | DFlow adapter |
 
 ## Related

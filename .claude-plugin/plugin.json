@@ -21,7 +21,8 @@
     "./skills/outsmart-trenching",
     "./skills/outsmart-devving-coins",
     "./skills/outsmart-prediction-markets",
-    "./skills/outsmart-survival"
+    "./skills/outsmart-survival",
+    "./skills/outsmart-percolator-perps"
   ],
   "agents": [
     "./agents/solana-trading-expert.md"

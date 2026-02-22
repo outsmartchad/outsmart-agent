@@ -1,6 +1,6 @@
 # outsmart-agent
 
-DeFi survival toolkit for AI agents on Solana. Trade, LP, snipe, trench, dev coins, and farm across 18 DEX protocols. Earn your own existence.
+DeFi survival toolkit for AI agents on Solana. Trade, LP, snipe, trench, dev coins, operate perp exchanges, and farm across 18 DEX protocols. Earn your own existence.
 
 ```
 npx outsmart-agent
@@ -10,7 +10,7 @@ npx outsmart-agent
 
 An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
 
-23 MCP tools for execution. 8 AI skills that teach the agent **when** and **why**, not just how.
+32 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
 
 ## Quick Start
 
@@ -84,9 +84,23 @@ npx skills add outsmartchad/outsmart-agent
 | `jupiter_dca_list` | List active/historical DCA orders |
 | `jupiter_dca_cancel` | Cancel a DCA order |
 
+### Percolator Perp Tools (9)
+
+| Tool | What |
+|------|------|
+| `percolator_create_market` | Create a permissionless perp exchange |
+| `percolator_init_user` | Register a trader account on a market |
+| `percolator_deposit` | Deposit collateral |
+| `percolator_withdraw` | Withdraw collateral |
+| `percolator_trade` | Open/close/modify leveraged positions |
+| `percolator_push_oracle` | Update oracle price (admin-oracle mode) |
+| `percolator_crank` | Run keeper crank |
+| `percolator_market_state` | Read full market state |
+| `percolator_insurance_lp` | Deposit/withdraw insurance fund LP |
+
 ## Skills
 
-8 strategy skills that teach agents how to think about Solana DeFi:
+9 strategy skills that teach agents how to think about Solana DeFi:
 
 | Skill | What |
 |-------|------|
@@ -98,6 +112,7 @@ npx skills add outsmartchad/outsmart-agent
 | **outsmart-dca-grid** | Jupiter Recurring DCA + DLMM grid trading |
 | **outsmart-prediction-markets** | Probability estimation, edge calculation, Jupiter + Polymarket + Futarchy |
 | **outsmart-survival** | Capital management, survival tiers, emergency liquidation |
+| **outsmart-percolator-perps** | Operating perp exchanges — market creation, LP, pricing, keeper duties |
 
 ## Supported DEXes
 
@@ -114,10 +129,11 @@ npx skills add outsmartchad/outsmart-agent
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (23 tools)
-TX landing providers        8 AI skills
-Wallet + TX helpers         Agent definition
-DexScreener API             Plugin manifest
+18 DEX adapters             MCP server (32 tools)
+Percolator perps            9 AI skills
+TX landing providers        Agent definition
+Wallet + TX helpers         Plugin manifest
+DexScreener API
 ```
 
 `outsmart-agent` imports `outsmart` as a dependency. The MCP server is a thin wrapper — validates params, calls adapter methods, returns JSON.
@@ -145,17 +161,19 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 | `PRIVATE_KEY` | Yes | Base58 Solana private key |
 | `MAINNET_ENDPOINT` | Yes | Solana RPC (Helius, Triton, etc.) |
 | `JUPITER_API_KEY` | No | Jupiter Ultra, Shield, Prediction, DCA |
+| `DEVNET_ENDPOINT` | No | Solana devnet RPC (Percolator) |
 | `DFLOW_API_KEY` | No | DFlow |
 
 ## Roadmap
 
-- [x] MCP Server — 23 tools (14 DEX + 9 Jupiter), 18 DEX adapters
-- [x] AI Skills — 8 strategy skills
+- [x] MCP Server — 32 tools (14 DEX + 9 Jupiter + 9 Percolator), 18 DEX adapters
+- [x] AI Skills — 9 strategy skills
 - [x] Claude Code Plugin manifest
+- [x] Percolator — Permissionless perp exchange creation, trading, LP, insurance
 - [ ] Event Streaming — Yellowstone gRPC for real-time pool creation
 - [ ] LP Manager — Autonomous rebalancing and fee compounding
 - [ ] Strategy Engine — Tier-aware capital allocation
-- [ ] Percolator — Permissionless perp exchange LP
+- [ ] Percolator Keeper — Background crank + liquidation service
 
 ## Related
 
