@@ -171,18 +171,60 @@ After trenching into a memecoin, consider the LP play (see `outsmart-lp-farming`
 2. **Token age > 30 min, established volume, many unique traders?** → Open a DLMM position (~0.2 SOL) with Curve strategy for ongoing fee capture
 3. **Your memecoin bag + LP fees** = dual income stream from a single trade
 
-## Common Memecoin Narratives
+## Narratives & Metas — How the Trenches Actually Work
 
-Memecoins run on narratives. Being early to the right narrative is everything:
+Memecoins don't run on fundamentals. They run on **metas** — narrative waves where one viral thing spawns dozens of derivative tokens. Being early to the right meta is everything. Being late to a dying meta is how you become exit liquidity.
 
-| Narrative Type | Example | How to Spot |
-|---------------|---------|-------------|
-| **Animal coins** | BONK, WIF, POPCAT | New animal meme goes viral on Twitter |
-| **AI/tech memes** | GOAT, TURBO | AI-generated content or AI agent tokens |
-| **Political** | TRUMP, BODEN | Election cycles, political events |
-| **CT insider** | Named after a CT personality or meme | CT feeds, quote tweets |
-| **Event-driven** | Token launched around a conference, announcement | Crypto calendar, news |
-| **CTO (Community Takeover)** | Dev abandoned, community revives | DexScreener CTO label, Telegram community activity |
+### How a Meta Forms
+
+1. **A catalyst goes viral** — a tweet, a product, a meme, a cultural moment
+2. **The "alpha" token launches** — the first token associated with the catalyst pumps hard
+3. **Copycats flood in** — dozens of tokens launch riding the same theme within hours
+4. **Meta peaks** — CT is saturated, everyone is talking about it, volume is insane
+5. **Meta dies** — attention shifts to the next thing. Latecomers get dumped on.
+
+**The window is small.** Most metas last 1-3 days. The money is made in the first few hours. By the time it's on everyone's timeline, you're late.
+
+### Recent Meta Examples
+
+| Meta | Catalyst | What Happened |
+|------|----------|---------------|
+| **Claw meta** | OpenClaw went viral → "claw machine" narrative explodes | Dozens of claw-themed tokens launched, first movers 10-50x'd |
+| **Moltbook** | Viral product/meme → spawned its own meta wave | Early entries printed, copycats followed within hours |
+| **Aliens meta** | Alien-themed content goes viral on CT | Alien tokens flood PumpFun, meta runs for 1-2 days |
+| **AI agents** | GOAT + ai16z narrative → every AI agent gets a token | Multi-week meta, biggest of 2024, spawned entire ecosystem |
+| **Chinese meta** | Chinese-language memes on CT → Western traders pile in | Short but explosive, tokens with Chinese characters pumped |
+| **Animal meta** | WIF → POPCAT → MOODENG → animal season | Rolling meta, each new viral animal gets its own token wave |
+| **Celeb meta** | Celebrity token launches (TRUMP etc.) | Massive volume spikes, extremely fast cycle (hours not days) |
+
+### How to Catch a Meta Early
+
+1. **Monitor CT obsessively** — the meta starts on Twitter/X. Watch for a topic getting unusual engagement, multiple accounts posting about the same new thing
+2. **Watch the "Sniper New" feed on GMGN** — when multiple new tokens share a theme (claw, alien, etc.), a meta is forming
+3. **Track smart money convergence** — when 3+ tracked profitable wallets buy tokens in the same narrative within an hour, the meta has legs
+4. **Check Cielo Mindshare** — a sudden spike in Mindshare for a theme/token = meta is heating up
+5. **Don't wait for confirmation** — by the time CT influencers are posting about it, you're in phase 4 (peak). The best entries are in phases 1-2.
+
+### Meta Lifecycle & Position Strategy
+
+| Phase | Signs | Action |
+|-------|-------|--------|
+| **1. Catalyst** | Viral tweet/event, 0-2 tokens launched | Ape the first clean token. Highest risk, highest reward. |
+| **2. Early meta** | 5-10 tokens, smart money entering, organic CT buzz | Buy the 2-3 strongest (best liquidity, best narrative fit). Standard size. |
+| **3. Meta confirmed** | 20+ tokens, CT influencers posting, trending on GMGN/DexScreener | Sell into strength on your early positions. Maybe buy the "last good one" with tiny size. |
+| **4. Peak/saturation** | Everyone talking about it, new tokens every minute, copycats of copycats | **SELL. Do not buy.** You are the exit liquidity at this point. |
+| **5. Meta death** | Volume crashes, CT moves on, new meta forming | Exit any remaining positions. Rotate attention to the next catalyst. |
+
+### What Makes a Meta Token "The One" vs a Copycat
+
+Not all tokens in a meta are equal. The winners tend to have:
+- **First mover** in the narrative (or the best name/ticker)
+- **Clean contract** — all security checks pass, no insider concentration
+- **Organic buyer diversity** — lots of unique wallets, not just 10 whales
+- **Sticky community** — Telegram/Discord forms fast and stays active
+- **The "official" feel** — best branding, closest association to the original catalyst
+
+The copycats that just slap the meta keyword in their name with no effort die fast.
 
 ## Red Flags — Instant No-Buy
 
