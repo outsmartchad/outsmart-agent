@@ -56,8 +56,8 @@ The MCP server is a thin wrapper — it imports adapters, types, and helpers fro
 
 - **File:** `src/mcp/server.ts`
 - Use `@modelcontextprotocol/sdk` package with `StdioServerTransport`
-- 11 MCP tools wrapping `outsmart` adapter methods:
-  - `solana_buy`, `solana_sell`, `solana_quote`, `solana_find_pool`
+- 10 MCP tools wrapping `outsmart` adapter methods:
+  - `solana_buy`, `solana_sell`, `solana_quote`
   - `solana_add_liquidity`, `solana_remove_liquidity`, `solana_claim_fees`, `solana_list_positions`
   - `solana_token_info`, `solana_list_dexes`, `solana_wallet_balance`
 - Each tool: validate params → get adapter from registry → call method → return JSON

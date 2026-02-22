@@ -170,35 +170,6 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
-// Tool: solana_find_pool
-// ---------------------------------------------------------------------------
-
-server.tool(
-  "solana_find_pool",
-  "Discover pools for a token on a specific DEX. Returns pool address, mints, liquidity, and price.",
-  {
-    dex: z.string().describe("DEX adapter name to search on"),
-    token: z.string().describe("Token mint address to find pools for"),
-    quote_mint: z.string().optional().describe("Quote token mint (default: WSOL)"),
-  },
-  async (args) => {
-    try {
-      const adapter = getAdapter(args.dex);
-      if (!adapter.findPool) {
-        return err(`${args.dex} does not support findPool`);
-      }
-      const result = await adapter.findPool(args.token, args.quote_mint);
-      if (!result) {
-        return err(`No pool found for ${args.token} on ${args.dex}`);
-      }
-      return ok(result);
-    } catch (e: any) {
-      return err(e.message);
-    }
-  },
-);
-
-// ---------------------------------------------------------------------------
 // Tool: solana_add_liquidity
 // ---------------------------------------------------------------------------
 

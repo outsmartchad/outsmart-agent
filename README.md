@@ -77,14 +77,13 @@ claude mcp add outsmart-agent -- npx outsmart-agent
 
 ## MCP Tools
 
-11 tools exposed over stdio transport:
+10 tools exposed over stdio transport:
 
 | Tool | Description |
 |------|-------------|
 | `solana_buy` | Buy tokens with SOL on any DEX |
 | `solana_sell` | Sell tokens for SOL (percentage-based) |
 | `solana_quote` | Get on-chain price from a pool |
-| `solana_find_pool` | Discover pools for a token on a DEX |
 | `solana_add_liquidity` | Add LP to a pool (supports DLMM strategies) |
 | `solana_remove_liquidity` | Remove LP from a pool |
 | `solana_claim_fees` | Claim accumulated swap fees from LP positions |

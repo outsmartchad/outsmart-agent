@@ -1,7 +1,7 @@
 ---
 name: solana-trading
-description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "find pool", "wallet balance", or mentions trading tokens on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
+description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "wallet balance", or mentions trading tokens on Solana.
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
 model: opus
 license: ISC
 metadata:
@@ -20,7 +20,6 @@ Execute trades, manage liquidity, and query market data across 18 Solana DEX pro
 | Buy tokens with SOL | `solana_buy` | `dex`, `pool` or `token`, `amount` |
 | Sell tokens for SOL | `solana_sell` | `dex`, `pool` or `token`, `percentage` |
 | Check on-chain price | `solana_quote` | `dex`, `pool` |
-| Find a pool for a token | `solana_find_pool` | `dex`, `token` |
 | Add liquidity | `solana_add_liquidity` | `dex`, `pool`, `amount_sol` |
 | Remove liquidity | `solana_remove_liquidity` | `dex`, `pool`, `percentage` |
 | Claim LP fees | `solana_claim_fees` | `dex`, `pool` |
@@ -128,25 +127,6 @@ Get on-chain price from a pool.
 ```
 
 Returns: price, base/quote mints, pool address, timestamp.
-
-### solana_find_pool
-
-Discover pools for a token on a specific DEX.
-
-```json
-{
-  "dex": "raydium-cpmm",
-  "token": "TOKEN_MINT_ADDRESS"
-}
-```
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `dex` | Yes | DEX to search on |
-| `token` | Yes | Token mint to find pools for |
-| `quote_mint` | No | Quote token (default: WSOL) |
-
-Returns: pool address, base/quote mints, decimals, liquidity, price.
 
 ### solana_add_liquidity
 
@@ -278,26 +258,26 @@ For a specific token:
 
 ### Buy a Token
 
+With an aggregator (simplest — no pool address needed):
 ```
 1. solana_token_info(token) → check liquidity, age, volume
-2. solana_find_pool(dex, token) → get pool address
-3. solana_buy(dex, pool, amount, dry_run=true) → simulate
-4. solana_buy(dex, pool, amount) → execute
+2. solana_buy(dex="jupiter-ultra", token, amount, dry_run=true) → simulate
+3. solana_buy(dex="jupiter-ultra", token, amount) → execute
 ```
 
-Or with an aggregator (simpler):
+With an on-chain DEX (need pool address from DexScreener or other source):
 ```
-1. solana_token_info(token) → check liquidity
-2. solana_buy(dex="jupiter-ultra", token, amount) → execute
+1. solana_token_info(token) → check liquidity, get pool address
+2. solana_buy(dex, pool, amount, dry_run=true) → simulate
+3. solana_buy(dex, pool, amount) → execute
 ```
 
 ### Provide Liquidity
 
 ```
-1. solana_find_pool(dex, token) → get pool
-2. solana_quote(dex, pool) → check current price
-3. solana_add_liquidity(dex, pool, amount_sol, strategy="spot") → add LP
-4. solana_list_positions(dex, pool) → verify position
+1. solana_quote(dex, pool) → check current price
+2. solana_add_liquidity(dex, pool, amount_sol, strategy="spot") → add LP
+3. solana_list_positions(dex, pool) → verify position
 ```
 
 ### Exit LP Position
