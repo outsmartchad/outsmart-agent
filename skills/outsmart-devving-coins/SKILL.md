@@ -24,6 +24,20 @@ For an autonomous agent, devving a coin isn't just a meme — it's a **revenue s
 | **Jupiter Studio (DBC)** | Configurable by market cap | Configurable (e.g., 69k USDC mcap) | Meteora DAMM v2 | ~0.02 SOL |
 | **Meteora DBC** | Dynamic bonding curve | Configurable | Meteora DAMM v2 pool | ~0.02 SOL |
 
+### Important: LaunchLab & Meteora DBC Are Infrastructure
+
+**PumpFun** is its own closed platform — only pump.fun uses PumpFun's bonding curve.
+
+**Raydium LaunchLab** and **Meteora DBC** are different — they're underlying infrastructure that many third-party launchpads build on top of:
+
+- **LaunchLab wrappers:** american.fun and other launchpads use Raydium LaunchLab as their bonding curve engine. When you see a token launched on american.fun, it's a LaunchLab curve under the hood.
+- **Meteora DBC wrappers:** Various AI agent launchpads and startup platforms use Meteora DBC as their bonding curve. Jupiter Studio itself is a frontend for Meteora DBC.
+
+This matters because:
+1. **Tokens from wrapper platforms trade on the same underlying pools** — a token launched via american.fun is still a LaunchLab pool you can interact with via the `raydium-launchlab` adapter
+2. **More launchpads = more volume** through these curves — more tokens graduating, more LP opportunities
+3. **The outsmart adapters work regardless of which frontend was used** — if it's a LaunchLab curve, `raydium-launchlab` adapter handles it; if it's a Meteora DBC curve, `meteora-dbc` adapter handles it
+
 ## PumpFun — The OG Launchpad
 
 PumpFun is where most memecoins are born. Simple, fast, low-cost. The outsmart library has a `pumpfun` adapter with a **`create`** method that builds a new token + bonding curve in a single transaction.
