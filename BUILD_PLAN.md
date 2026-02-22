@@ -2,9 +2,10 @@
 
 ## Overview
 
-**Goal:** Build `outsmart-agent` as an AI agent trading SDK on Solana — exposing `outsmart-cli`'s 17 DEX adapters and 12 TX landing providers to AI agents via MCP, with OpenClaw browser intelligence for a complete on-chain trading system.
+**Goal:** Build `outsmart-agent` as an MCP server + AI skills package that wraps the `outsmart` npm package for AI agent use on Solana.
 
-**Core code:** Forked from `outsmart-cli`. The adapters and TX landing layer evolve independently in this repo.
+**Architecture:** `outsmart-agent` imports `outsmart` as an npm dependency — NO code duplication. The MCP server is a thin wrapper around the outsmart library's adapter methods.
+
 **Branch:** `main`
 
 ---
@@ -12,164 +13,96 @@
 ## Architecture
 
 ```
-outsmart-agent (code layer)         OpenClaw (browser layer)
-───────────────────────────         ────────────────────────
-Write (txns)    RPC -> raw IX -> land       Browser -> wallet -> sign -> submit
-Read (state)    RPC -> decode accts         Browser -> scrape UI -> extract
-Listen (events) gRPC/WebSocket -> stream    Browser -> poll pages -> detect
+outsmart (npm package)              outsmart-agent (this repo)
+──────────────────────              ────────────────────────────
+18 DEX adapters                     MCP server (11 tools)
+12 TX landing providers             AI skills (SKILL.md)
+Wallet/connection helpers           Claude Code marketplace plugin
+DexScreener utility                 Re-exports outsmart API
 ```
 
-outsmart-agent handles the **code layer** — raw RPC writes, on-chain reads, gRPC listeners.
-OpenClaw handles the **browser layer** — DeFi frontend navigation, wallet signing, dApp interaction.
+The MCP server calls `getDexAdapter()`, `listDexAdapters()`, `getInfoFromDexscreener()`, etc. from the `outsmart` package. No adapter code is copied.
 
 ---
 
 ## Phases
 
-### Phase 1 — Scaffold & Core Copy
+### Phase 1 — Bootstrap (DONE)
 
-Copy the core trading infrastructure from `outsmart-cli` into this repo:
+- [x] `package.json` — deps on `outsmart@^2.0.0-alpha.4` + `@modelcontextprotocol/sdk`
+- [x] `tsconfig.json` / `tsconfig.build.json`
+- [x] `src/index.ts` — library entry point re-exporting from outsmart
+- [x] `.npmrc` — `legacy-peer-deps=true`
+- [x] `AGENTS.md` → symlink to `CLAUDE.md`
+- [x] `npm install` — all deps resolved
+- [x] Typecheck passes
 
-- [ ] `src/dex/` — all 17 adapter files + types + registry
-- [ ] `src/transactions/` — landing orchestrator, 12 providers, nonce manager, tip accounts
-- [ ] `src/transactions/send-rpc.ts` — simple RPC send+confirm helper
-- [ ] `src/helpers/` — config, wallet, connection, Token-2022 utils
-- [ ] `src/dexscreener/` — market data utility
-- [ ] `src/index.ts` — SDK entry point (library, no CLI)
-- [ ] `package.json` — rename to `outsmart-agent`, remove CLI bin entry
-- [ ] `tsconfig.json` / `tsconfig.build.json`
-- [ ] Tests from `outsmart-cli` (registry, adapter tests)
-
-The code forks here — `outsmart-cli` and `outsmart-agent` evolve independently after this point.
-
-### Phase 2 — MCP Tool Server (~200-300 lines)
-
-Wrap every `IDexAdapter` method as an MCP tool. This is the primary interface for AI agents.
+### Phase 2 — MCP Tool Server
 
 **File:** `src/mcp/server.ts`
 
-**Tools to expose:**
+11 MCP tools wrapping outsmart adapter methods:
 
-| MCP Tool | Adapter Method | Required Params | Optional Params |
-|----------|---------------|-----------------|-----------------|
-| `buy` | `adapter.buy()` | `dex`, `token`, `amount` | `pool`, `slippage`, `tip`, `priority` |
-| `sell` | `adapter.sell()` | `dex`, `token`, `percentage` | `pool`, `slippage`, `tip` |
-| `snipe` | `adapter.snipe()` | `dex`, `token`, `pool`, `amount`, `tip` | `slippage`, `jito` |
-| `add_liq` | `adapter.addLiquidity()` | `dex`, `pool` | `amountSol`, `amountToken`, `strategy`, `bins` |
-| `remove_liq` | `adapter.removeLiquidity()` | `dex`, `pool`, `percentage` | `positionAddress` |
-| `claim_fees` | `adapter.claimFees()` | `dex`, `pool` | `positionAddress` |
-| `positions` | `adapter.listPositions()` | `dex`, `pool` | |
-| `get_price` | `adapter.getPrice()` | `dex`, `pool` | |
-| `find_pool` | `adapter.findPool()` | `dex`, `token` | `quote` |
-| `list_dex` | `registry.listDexAdapters()` | | `capability` |
-| `info` | `getInfoFromDexscreener()` | `token` | |
-
-**Implementation:**
-- Use the `@modelcontextprotocol/sdk` package
-- Each tool: validate params -> get adapter from registry -> call method -> return JSON result
-- Agent says "buy 0.1 SOL of token X on raydium-cpmm", server handles everything
-- Compatible with any MCP client: OpenClaw, Claude, custom agents
-
-**Entry point:** `npx outsmart-agent` starts the MCP server (stdio transport)
-
-### Phase 3 — OpenClaw Browser Intelligence
-
-OpenClaw provides the browser layer — navigating the same sites human trenchers use to gather intelligence not available via RPC.
-
-**Sites to integrate:**
-
-| Site | What the agent does there |
-|------|--------------------------|
-| [GMGN](https://gmgn.ai) | Smart money tracking, wallet profiling, insider activity detection. Check who's buying before outsmart-agent executes. |
-| [Axiom](https://axiom.trade) | Token sentiment, holder distribution, trade flow. For tokens that list on Axiom first, interact with the UI directly. |
-| [LPAgent](https://app.lpagent.io/) | LP position analytics, fee APR comparison, pool selection. Feed data back so outsmart-agent can rebalance/exit positions. |
-| [DexScreener](https://dexscreener.com) | Price charts, liquidity depth, social links. outsmart-agent queries the API directly; OpenClaw reads the linked project pages. |
-
-**Pattern:** outsmart-agent reads the chain, OpenClaw reads the internet.
+| MCP Tool | outsmart API | Required Params | Optional Params |
+|----------|-------------|-----------------|-----------------|
+| `solana_buy` | `adapter.buy()` | `dex`, `pool` OR `token`, `amount` | `slippage_bps`, `tip_sol`, `dry_run` |
+| `solana_sell` | `adapter.sell()` | `dex`, `pool` OR `token`, `percentage` | `slippage_bps`, `dry_run` |
+| `solana_quote` | `adapter.getPrice()` | `dex`, `pool` | |
+| `solana_find_pool` | `adapter.findPool()` | `dex`, `token` | `quote_mint` |
+| `solana_add_liquidity` | `adapter.addLiquidity()` | `dex`, `pool` | `amount_sol`, `amount_token`, `strategy`, `bins` |
+| `solana_remove_liquidity` | `adapter.removeLiquidity()` | `dex`, `pool`, `percentage` | `position_address` |
+| `solana_claim_fees` | `adapter.claimFees()` | `dex`, `pool` | `position_address` |
+| `solana_list_positions` | `adapter.listPositions()` | `dex`, `pool` | |
+| `solana_token_info` | `getInfoFromDexscreener()` | `token` | |
+| `solana_list_dexes` | `listDexAdapters()` | | `capability` |
+| `solana_wallet_balance` | `checkBalanceByAddress()` | | `token_mint` |
 
 **Implementation:**
-- Define OpenClaw tool schemas for each site interaction
-- Each tool returns structured data (not raw HTML)
-- Tools are composable — an agent workflow chains multiple tools together
+- Use `@modelcontextprotocol/sdk` with `McpServer` + `StdioServerTransport`
+- Each tool: validate params → get adapter from registry → call method → return JSON
+- `#!/usr/bin/env node` shebang for `npx outsmart-agent` execution
+- Error handling: catch adapter errors, return structured error messages
 
-### Phase 4 — Hybrid Agent Workflows
+### Phase 3 — AI Skills
 
-Pre-built workflow templates that combine outsmart-agent (code) + OpenClaw (browser).
+**File:** `skills/outsmart/SKILL.md`
 
-**Workflow: Snipe-with-Verification**
-1. outsmart-agent (Listen): gRPC stream detects new pool creation on Raydium
-2. outsmart-agent (Read): Fetch pool state, token mint, initial liquidity
-3. OpenClaw (Browse): Navigate to GMGN — check smart money wallets, insider flags
-4. OpenClaw (Browse): Navigate to project website — verify team page, audit links
-5. OpenClaw (Decide): "Looks legit, proceed" / "Red flags, skip"
-6. outsmart-agent (Write): Execute snipe with MEV tip through 12 providers
-7. OpenClaw (Browse): Monitor token chart on Birdeye/DexScreener
-8. outsmart-agent (Write): Sell at target or stop-loss
+Core trading skill with skills.sh-compatible frontmatter:
+- Name, description, license, author metadata
+- Command reference for all 11 MCP tools
+- DEX selection guide (which adapter for which use case)
+- Safety rules (never trade more than X, always check liquidity, etc.)
+- Survival guidelines for autonomous agents
 
-**Workflow: LP Management**
-1. OpenClaw (Browse): Check LPAgent for best fee APR pools
-2. outsmart-agent (Write): Add liquidity on Meteora DAMM v2 via `add_liq`
-3. OpenClaw (Browse): Monitor position performance on LPAgent dashboard
-4. outsmart-agent (Read): Check unclaimed fees via on-chain math
-5. outsmart-agent (Write): Claim fees via `claim_fees`
-6. OpenClaw (Browse): Compare APR with competing pools on LPAgent
-7. outsmart-agent (Write): Rebalance — remove from underperforming pool, add to better one
+### Phase 4 — Distribution
 
-### Phase 5 — gRPC Snipe Streaming
+- [ ] `.claude-plugin/marketplace.json` — Claude Code marketplace registration
+- [ ] Update `README.md` — MCP setup instructions, Claude Desktop config example
+- [ ] Verify `npx outsmart-agent` starts MCP server correctly
 
-Background process that listens for new pool creation events and instantly executes buys.
+### Phase 5 — Publish
 
-**How it works:**
-1. Connect to Geyser gRPC stream (Yellowstone) using user's gRPC key
-2. Subscribe to program account updates for selected DEX program IDs
-3. Filter for pool creation events — new accounts matching pool layout
-4. When target token matches, fire buy through concurrent multi-provider TX landing
-5. Use durable nonce for exactly-once execution safety
-
-**Requirements:**
-- `GRPC_URL` and `GRPC_XTOKEN` environment variables
-- User's own Geyser gRPC key (Helius, Triton, Shyft, etc.)
-
-**Implementation:**
-- Port gRPC streaming code from `100x-algo-bots/trading-modules/`
-- Reconnection logic, heartbeat, clean shutdown
-- Wire pool creation detection to existing `snipe()` adapter methods
-- Wire to `LandingOrchestrator.submitConcurrent()` with nonce for dedup safety
-- Timing: after user provides specific instructions from `100x-algo-bots` repo
+- [ ] Publish `outsmart-agent@1.0.0-alpha.1` to npm
+- [ ] Create GitHub Release
+- [ ] Test end-to-end: install from npm → configure Claude Desktop → call tools
 
 ---
 
-## Shared Wallet Architecture
+## Future Phases (from outsmart-cli strategic plan)
 
-- outsmart-agent holds the private key (env var) for direct RPC signing
-- OpenClaw controls the same wallet via browser extension (Phantom/Backpack)
-- Both can sign transactions: outsmart-agent for speed (raw RPC), OpenClaw for UI-only protocols
-
----
-
-## Key Differences from outsmart-cli
-
-| | outsmart-cli | outsmart-agent |
-|---|---|---|
-| **Interface** | CLI (`outsmart buy ...`) | SDK + MCP server |
-| **Target user** | Human traders in terminal | AI agents (OpenClaw, Claude, custom) |
-| **Entry point** | `src/cli.ts` (Commander.js) | `src/index.ts` (library) + `src/mcp/server.ts` |
-| **Package name** | `outsmart` (npm) | `outsmart-agent` (npm) |
-| **Browser layer** | None | OpenClaw integration |
-| **gRPC streaming** | Deferred | Phase 5 |
-
-The core trading code (adapters, TX landing, types) is shared origin but evolves independently.
+- **OpenClaw integration** — browser intelligence layer (GMGN, Axiom, LPAgent)
+- **gRPC snipe streaming** — Yellowstone gRPC for pool creation detection
+- **Hybrid workflows** — snipe-with-verification, LP management with APR tracking
+- **Percolator** — perpetual exchange integration (blocked on mainnet launch)
 
 ---
 
 ## Deliverable Checklist
 
-- [ ] Core code scaffolded from outsmart-cli
-- [ ] MCP tool server exposing all adapter methods
+- [x] Project bootstrapped with outsmart as npm dependency
+- [ ] MCP tool server exposing 11 tools
+- [ ] Core trading skill (SKILL.md)
+- [ ] Claude Code marketplace plugin
+- [ ] README with MCP setup instructions
 - [ ] Published to npm as `outsmart-agent`
-- [ ] OpenClaw tool schemas for GMGN, Axiom, LPAgent, DexScreener
-- [ ] Pre-built hybrid workflows (snipe-with-verification, LP management)
-- [ ] gRPC snipe streaming background process
-- [ ] Shared wallet architecture documented and tested
-- [ ] README with SDK usage examples
-- [ ] Tests for MCP tool server
+- [ ] End-to-end test: npx → MCP client → tool call → on-chain TX

@@ -1,0 +1,59 @@
+{
+  "name": "outsmart-agent",
+  "version": "1.0.0-alpha.1",
+  "description": "MCP server + AI skills for Solana trading — wraps the outsmart CLI library for AI agent use.",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "outsmart-agent": "./dist/mcp/server.js"
+  },
+  "files": [
+    "dist/",
+    "skills/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:ts && npm run build:chmod",
+    "build:ts": "tsc -p tsconfig.build.json",
+    "build:chmod": "chmod +x dist/mcp/server.js || true",
+    "clean": "rm -rf dist/",
+    "dev": "ts-node src/mcp/server.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "solana",
+    "mcp",
+    "ai-agent",
+    "trading",
+    "dex",
+    "outsmart",
+    "claude",
+    "skills"
+  ],
+  "author": "vincentso",
+  "license": "ISC",
+  "homepage": "https://github.com/outsmartchad/outsmart-agent",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outsmartchad/outsmart-agent.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.0",
+    "outsmart": "^2.0.0-alpha.4",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.4"
+  },
+  "overrides": {
+    "@solana/web3.js": "^1.95.0"
+  }
+}

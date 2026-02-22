@@ -1,0 +1,19 @@
+{
+  "name": "outsmart-agent",
+  "version": "1.0.0",
+  "owner": {
+    "name": "outsmartchad",
+    "email": "outsmartchad@users.noreply.github.com"
+  },
+  "metadata": {
+    "description": "Solana DeFi trading tools for AI agents — buy, sell, LP, claim fees across 18 DEX protocols via MCP.",
+    "repository": "https://github.com/outsmartchad/outsmart-agent"
+  },
+  "plugins": [
+    {
+      "name": "outsmart-trading",
+      "source": ".",
+      "description": "Execute trades, manage liquidity, and query market data across 18 Solana DEX protocols"
+    }
+  ]
+}
