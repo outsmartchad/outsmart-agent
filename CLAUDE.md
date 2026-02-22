@@ -25,7 +25,7 @@ The DeFi survival toolkit for AI agents on Solana.
 
 ### AI Skills (`skills/`)
 7 strategy skills with YAML frontmatter:
-- `outsmart` — Core trading reference
+- `outsmart-dex-trading` — Core trading reference
 - `outsmart-lp-farming` — LP deployment and yield optimization
 - `outsmart-lp-sniping` — New token launch evaluation
 - `outsmart-trenching` — Memecoin trading with social signal analysis
@@ -48,7 +48,7 @@ outsmart-agent/
 │   └── mcp/
 │       └── server.ts         # MCP server (10 tools, ~320 lines)
 ├── skills/
-│   ├── outsmart/
+│   ├── outsmart-dex-trading/
 │   │   ├── SKILL.md          # Core trading skill
 │   │   └── references/
 │   │       └── advanced-patterns.md

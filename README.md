@@ -157,7 +157,7 @@ Agent: "What's the liquidity and volume on this token?"
 
 | Skill | What It Teaches |
 |-------|----------------|
-| **`outsmart`** | Core trading — DEX selection, tool reference, safety rules |
+| **`outsmart-dex-trading`** | Core trading — DEX selection, tool reference, safety rules |
 | **`outsmart-lp-farming`** | LP deployment, fee compounding, rebalancing, yield optimization |
 | **`outsmart-lp-sniping`** | New token launch evaluation, entry/exit timing, position sizing |
 | **`outsmart-trenching`** | Memecoin trading — social signals, whale detection, take-profit ladders |

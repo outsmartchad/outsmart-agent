@@ -1,5 +1,5 @@
 ---
-name: solana-trading
+name: outsmart-dex-trading
 description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "wallet balance", or mentions trading tokens on Solana.
 allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
 model: opus

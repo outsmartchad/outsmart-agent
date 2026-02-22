@@ -14,7 +14,7 @@
   ],
   "license": "ISC",
   "skills": [
-    "./skills/outsmart",
+    "./skills/outsmart-dex-trading",
     "./skills/outsmart-lp-farming",
     "./skills/outsmart-lp-sniping",
     "./skills/outsmart-dca-grid",
