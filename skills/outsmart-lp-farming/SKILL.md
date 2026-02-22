@@ -26,6 +26,7 @@ Deploy SOL and tokens into Solana liquidity pools. Earn swap fees on every trade
 | **One-sided LP** | Yes — SOL-only below active bin (buy wall) or token-only above (sell wall) | No — always proportional both-sided |
 | **Max positions** | 69 bins per position (protocol limit) | Unlimited liquidity per position (full range) |
 | **When to enter** | Token age >30 min, proven volume, lots of unique traders, higher mcap | Token age <5 min, big volume spike, many manual swap txns (Jupiter, DFlow, GMGN, Axiom traders) |
+| **Cost** | ~0.2 SOL (expensive — account rent for bins) | ~0.02 SOL (cheap — single full-range position) |
 
 ---
 
@@ -362,7 +363,7 @@ DAMM v2 at 100% calls `removeAllLiquidityAndClosePosition` — closes the positi
 | **DLMM IL** | Binary — use wider bins (50+), rebalance when >80% single-sided |
 | **DAMM v2 IL** | Standard AMM — significant on volatile pairs. Offset by high initial fees if you're first LP |
 | **Rug pull** | Only LP tokens with >$100k liquidity, >24h age, organic buyer distribution |
-| **Gas costs** | DLMM rebalance costs ~0.01-0.02 SOL. Budget 0.05 SOL per full LP cycle. Don't rebalance for small moves |
+| **Gas costs** | DLMM LP costs ~0.2 SOL (bin account rent). DAMM v2 pool creation costs ~0.02 SOL. Factor this into profitability — DLMM only makes sense on tokens with enough volume to recoup the 0.2 SOL cost |
 | **Permanent lock** | Config pool `lockLiquidity: true` means the initial LP can **never** be removed. Only use intentionally |
 | **Smart contract risk** | Stick to audited protocols (Meteora, Raydium). Never LP on unknown forks |
 
