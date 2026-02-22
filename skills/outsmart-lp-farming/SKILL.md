@@ -1,7 +1,7 @@
 ---
 name: outsmart-lp-farming
 description: Manage LP positions on Solana to earn swap fees. Use when user says "farm", "LP", "provide liquidity", "earn yield", "compound fees", "add liquidity", "remove liquidity", "claim fees", "rebalance", "create pool", "DAMM", "DLMM", or mentions earning passive income on Solana DEXes.
-allowed-tools: mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes
+allowed-tools: mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes
 model: opus
 license: ISC
 metadata:
@@ -104,13 +104,13 @@ A brand new token (< 5 min old) with:
 - Many manual swap transactions (Jupiter, DFlow, GMGN, Axiom traders — not just bots)
 - No existing DAMM v2 pool
 
-That's your window. Create the pool, seed it, let the volume pay you.
+That's your window. Check if a pool exists with `solana_find_pool(dex="meteora-damm-v2", base_mint=TOKEN)`. If `found: false`, create it with `solana_create_pool` and seed it.
 
-### Two Creation Paths
+### Two Creation Paths (via `solana_create_pool` MCP tool)
 
-**Custom Pool** — full control over fee schedule, dynamic fees, collect mode, activation timing. Use when you want to tune everything.
+**Custom Pool** (`mode: "custom"`) — full control over fee schedule, dynamic fees, collect mode, activation timing. Use when you want to tune everything.
 
-**Config Pool** — reference an existing on-chain config. Simpler, faster. Can permanently lock initial LP with `lockLiquidity: true`.
+**Config Pool** (`mode: "config"`) — reference an existing on-chain config. Simpler, faster. Can permanently lock initial LP with `lock_liquidity: true`.
 
 ### Fee Schedule
 

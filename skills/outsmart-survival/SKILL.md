@@ -73,13 +73,17 @@ If the platform accepts Solana USDC directly, no bridge needed. Some platforms e
 
 ## Emergency Liquidation (Critical)
 
+**Important:** `solana_list_positions` requires a specific pool address — the agent can't auto-discover all positions across all pools. You need to track which pools you've LP'd into. Keep a running list.
+
 ```
-1. Find ALL LP positions across all pools
-2. For each: claim fees → remove 100%
-3. Sell ALL token holdings via jupiter-ultra
+1. For each known LP pool:
+   a. solana_list_positions(dex, pool) → check positions
+   b. solana_claim_fees(dex, pool) → collect pending fees
+   c. solana_remove_liquidity(dex, pool, percentage=100) → withdraw
+2. solana_wallet_balance() → check all token balances
+3. Sell ALL token holdings via solana_sell(dex="jupiter-ultra", ...)
 4. Convert remaining SOL to USDC
 5. Alert user: "CRITICAL — need $X USDC for compute"
-6. Top up if API available, otherwise hold USDC and keep alerting
 ```
 
 ## Strategy by Market

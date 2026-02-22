@@ -2,11 +2,12 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 11 MCP tools wrapping the `outsmart` trading library.
+ * Exposes 14 MCP tools wrapping the `outsmart` trading library.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
  * Tools:
- *   solana_buy, solana_sell, solana_quote, solana_find_pool,
+ *   solana_buy, solana_sell, solana_quote, solana_find_pool, solana_snipe,
+ *   solana_create_pool, solana_create_token,
  *   solana_add_liquidity, solana_remove_liquidity, solana_claim_fees,
  *   solana_list_positions, solana_token_info, solana_list_dexes,
  *   solana_wallet_balance
@@ -372,6 +373,180 @@ server.tool(
       return ok({
         wallet: address,
         sol_balance: solBalance,
+      });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: solana_find_pool
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "solana_find_pool",
+  "Find a pool address for a token pair on a specific DEX. Returns the pool address, base/quote mints, and liquidity info.",
+  {
+    dex: z.string().describe("DEX adapter name (e.g. 'meteora-damm-v2', 'raydium-cpmm')"),
+    base_mint: z.string().describe("Base token mint address (the token you want to trade)"),
+    quote_mint: z.string().optional().describe("Quote token mint address (default: WSOL)"),
+  },
+  async (args) => {
+    try {
+      const adapter = getAdapter(args.dex);
+      if (!adapter.findPool) {
+        return err(`${args.dex} does not support findPool`);
+      }
+      const result = await adapter.findPool(args.base_mint, args.quote_mint);
+      if (!result) {
+        return ok({ found: false, message: `No pool found for this pair on ${args.dex}` });
+      }
+      return ok({ found: true, ...result });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: solana_snipe
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "solana_snipe",
+  "Competitive buy with Jito MEV tip for faster execution. Use for time-sensitive buys where you want priority over other traders.",
+  {
+    dex: z.string().describe("DEX adapter name"),
+    pool: z.string().describe("Pool address to snipe on"),
+    token: z.string().describe("Token mint address to buy"),
+    amount: z.number().positive().describe("Amount of SOL to spend"),
+    tip_sol: z.number().min(0).describe("Jito MEV tip in SOL (e.g. 0.001 for low priority, 0.01 for high)"),
+    slippage_bps: z.number().int().min(0).max(10000).optional().describe("Slippage tolerance in basis points"),
+  },
+  async (args) => {
+    try {
+      const adapter = getAdapter(args.dex);
+      if (!adapter.snipe) {
+        return err(`${args.dex} does not support snipe`);
+      }
+      const result = await adapter.snipe({
+        tokenMint: args.token,
+        amountSol: args.amount,
+        poolAddress: args.pool,
+        tipSol: args.tip_sol,
+        opts: {
+          slippageBps: args.slippage_bps,
+        },
+      });
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: solana_create_pool
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "solana_create_pool",
+  "Create a new DAMM v2 liquidity pool on Meteora. Two modes: 'custom' (full fee schedule control) or 'config' (use pre-existing on-chain config). The alpha play is being the first pool creator on a new token — set 99% starting fee to capture early volume.",
+  {
+    mode: z.enum(["custom", "config"]).describe("'custom' for full fee control, 'config' to use a pre-existing on-chain config"),
+    base_mint: z.string().describe("Base token mint address (the token)"),
+    quote_mint: z.string().optional().describe("Quote token mint (default: WSOL)"),
+    base_amount: z.number().min(0).describe("Amount of base token to seed the pool with"),
+    quote_amount: z.number().min(0).describe("Amount of quote token (SOL) to seed the pool with"),
+    init_price: z.number().positive().optional().describe("Initial price in quote/base units. If omitted, calculated from quoteAmount/baseAmount"),
+    // Custom mode params
+    max_base_fee_bps: z.number().int().min(0).max(10000).optional().describe("Starting fee in BPS (e.g. 9900 = 99%). Custom mode only."),
+    min_base_fee_bps: z.number().int().min(0).max(10000).optional().describe("Ending fee in BPS (e.g. 200 = 2%). Custom mode only."),
+    total_duration: z.number().int().positive().optional().describe("Fee decay duration in seconds (e.g. 86400 = 24h). Custom mode only."),
+    number_of_period: z.number().int().positive().optional().describe("Number of fee decay steps (e.g. 100). Custom mode only."),
+    fee_scheduler_mode: z.number().int().min(0).max(1).optional().describe("0 = linear decay, 1 = exponential decay. Custom mode only."),
+    use_dynamic_fee: z.boolean().optional().describe("Enable volatility-based fee surcharge. Custom mode only."),
+    collect_fee_mode: z.number().int().min(0).max(1).optional().describe("0 = both tokens, 1 = quote token only. Custom mode only."),
+    // Config mode params
+    config_address: z.string().optional().describe("On-chain config address. Config mode only."),
+    lock_liquidity: z.boolean().optional().describe("Permanently lock initial LP (can NEVER be removed). Config mode only."),
+  },
+  async (args) => {
+    try {
+      const adapter = getAdapter("meteora-damm-v2");
+
+      if (args.mode === "custom") {
+        if (!adapter.createCustomPool) {
+          return err("meteora-damm-v2 adapter does not support createCustomPool");
+        }
+        if (!args.max_base_fee_bps || !args.min_base_fee_bps || !args.total_duration || !args.number_of_period) {
+          return err("Custom mode requires: max_base_fee_bps, min_base_fee_bps, total_duration, number_of_period");
+        }
+        const result = await adapter.createCustomPool({
+          baseMint: args.base_mint,
+          quoteMint: args.quote_mint,
+          baseAmount: args.base_amount,
+          quoteAmount: args.quote_amount,
+          initPrice: args.init_price,
+          poolFees: {
+            maxBaseFeeBps: args.max_base_fee_bps,
+            minBaseFeeBps: args.min_base_fee_bps,
+            totalDuration: args.total_duration,
+            numberOfPeriod: args.number_of_period,
+            feeSchedulerMode: args.fee_scheduler_mode ?? 0,
+            useDynamicFee: args.use_dynamic_fee ?? false,
+          },
+          collectFeeMode: args.collect_fee_mode,
+        });
+        return ok(result);
+      } else {
+        if (!adapter.createConfigPool) {
+          return err("meteora-damm-v2 adapter does not support createConfigPool");
+        }
+        if (!args.config_address) {
+          return err("Config mode requires: config_address");
+        }
+        const result = await adapter.createConfigPool({
+          baseMint: args.base_mint,
+          quoteMint: args.quote_mint,
+          baseAmount: args.base_amount,
+          quoteAmount: args.quote_amount,
+          initPrice: args.init_price,
+          configAddress: args.config_address,
+          lockLiquidity: args.lock_liquidity,
+        });
+        return ok(result);
+      }
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: solana_create_token
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "solana_create_token",
+  "Create a new token on PumpFun with a bonding curve. Deploys a new SPL token (6 decimals, 1B supply, mint/freeze disabled) and creates a bonding curve. The token graduates to PumpSwap AMM when the curve fills (~85 SOL).",
+  {
+    name: z.string().describe("Token name (e.g. 'My Token')"),
+    symbol: z.string().describe("Token ticker (e.g. 'MYTOKEN')"),
+    metadata_uri: z.string().describe("Metadata URI — IPFS or Arweave link to JSON metadata with image"),
+  },
+  async (args) => {
+    try {
+      const adapter = getAdapter("pumpfun") as any;
+      if (!adapter.create) {
+        return err("pumpfun adapter does not support create");
+      }
+      const result = await adapter.create(args.name, args.symbol, args.metadata_uri);
+      return ok({
+        ...result,
+        note: "positionAddress is the new token mint address. poolAddress is the bonding curve PDA.",
       });
     } catch (e: any) {
       return err(e.message);

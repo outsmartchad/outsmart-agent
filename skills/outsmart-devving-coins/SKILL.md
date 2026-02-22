@@ -1,7 +1,7 @@
 ---
 name: outsmart-devving-coins
 description: Launch tokens on Solana launchpads. Use when user says "dev a coin", "devving", "launch token", "create token", "bonding curve", "pump fun", "pumpfun", "launchlab", "jupiter studio", "DBC", "dynamic bonding curve", "launch a meme", "deploy token", or mentions creating/launching a new token on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, WebFetch
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -51,21 +51,17 @@ Metas don't last forever. Knowing where you are in the cycle is critical:
 The default choice for memecoin launches. Biggest audience, most eyeballs, everyone's watching the PumpFun feed.
 
 - **Cost:** ~0.02 SOL
-- **How it works:** Create token → bonding curve fills → graduates at ~85 SOL → migrates to Raydium AMM
+- **How it works:** Create token → bonding curve fills → graduates at ~85 SOL → migrates to PumpSwap (PumpFun's own AMM)
 - **All tokens:** 6 decimals, 1B supply, mint/freeze authority disabled by default
 - **Dev buy:** You can buy your own token at creation (sets initial price, shows conviction)
 
-The outsmart `pumpfun` adapter has a `create()` method — single transaction, token + curve + optional initial buy.
+The MCP server has a `solana_create_token` tool that wraps PumpFun's create method:
 
 ```json
 {
-  "dex": "pumpfun",
-  "action": "create",
   "name": "Token Name",
   "symbol": "TICKER",
-  "description": "Token description",
-  "image_url": "https://...",
-  "initial_buy_sol": 0.1
+  "metadata_uri": "https://arweave.net/... or ipfs://..."
 }
 ```
 
@@ -110,15 +106,15 @@ What matters to you: if a token was launched via any DBC-based launchpad, the ou
 |-------------|-----|-----|
 | Max eyeballs, quick meme | **PumpFun** | Biggest audience, simplest flow |
 | USDC curve, anti-snipe, vesting | **Jupiter Studio** | Built-in protections, DAMM v2 graduation |
-| Agent autonomously launching | **PumpFun** | Single TX via `pumpfun.create()` |
+| Agent autonomously launching | **PumpFun** | Single TX via `solana_create_token` MCP tool |
 | DAMM v2 graduation (for LP farming after) | **Jupiter Studio** or **Meteora DBC** | Both graduate to DAMM v2 |
 
 ## After Graduation — The Real Money
 
 Launching the token is just step 1. The revenue comes from what happens after:
 
-1. **Token graduates** → auto-migrates to DEX pool
-2. **Create a DAMM v2 pool** (if it graduated to Raydium, not already on DAMM v2) → set 99% starting fee decaying to 2% → capture massive early volume fees. Cost: ~0.02 SOL.
+1. **Token graduates** → auto-migrates to DEX pool (PumpSwap for PumpFun, DAMM v2 for Jupiter Studio/DBC, CPMM for LaunchLab)
+2. **Create a DAMM v2 pool** (if it graduated to PumpSwap or Raydium, not already on DAMM v2) → use `solana_create_pool` with 99% starting fee decaying to 2% → capture massive early volume fees. Cost: ~0.02 SOL.
 3. **As token matures** (>30 min, real volume) → open a DLMM position for concentrated fee capture. Cost: ~0.2 SOL.
 4. **Claim fees + compound**
 

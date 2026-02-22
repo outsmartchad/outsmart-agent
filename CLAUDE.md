@@ -18,8 +18,9 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-10 tools over stdio transport:
-- `solana_buy`, `solana_sell`, `solana_quote`
+14 tools over stdio transport:
+- `solana_buy`, `solana_sell`, `solana_quote`, `solana_snipe`
+- `solana_find_pool`, `solana_create_pool`, `solana_create_token`
 - `solana_add_liquidity`, `solana_remove_liquidity`, `solana_claim_fees`, `solana_list_positions`
 - `solana_token_info`, `solana_list_dexes`, `solana_wallet_balance`
 

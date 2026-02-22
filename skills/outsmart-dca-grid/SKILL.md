@@ -15,15 +15,15 @@ Two ways to take emotion out of trading. Jupiter's DCA runs on autopilot. DLMM g
 
 ## DCA — Dollar-Cost Averaging
 
-### Jupiter Recurring (Recommended)
+### Jupiter Recurring (Recommended — but not yet MCP-executable)
 
-Set it once, Jupiter's keeper bots handle the rest. You sign one transaction, the swaps execute automatically on schedule. 0.1% fee per swap.
+**Note:** Jupiter Recurring API is NOT yet exposed as MCP tools. Creating and cancelling orders requires signed transactions. The agent can check order status via WebFetch but can't create orders autonomously yet. Use the Jupiter UI or CLI to set up recurring orders, then the agent can monitor them.
 
-- `POST /recurring/v1/createOrder` — create with input/output mints, amount per cycle, frequency, number of cycles
-- `GET /recurring/v1/getRecurringOrders` — check status
-- `POST /recurring/v1/cancelOrder` — cancel and get remaining funds back
+- `POST /recurring/v1/createOrder` — **not MCP-executable** (needs signing)
+- `GET /recurring/v1/getRecurringOrders` — can check via WebFetch
+- `POST /recurring/v1/cancelOrder` — **not MCP-executable** (needs signing)
 
-Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it.
+Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it. Set it up manually, let keepers run it.
 
 ### Manual DCA (Agent-Controlled)
 

@@ -23,18 +23,21 @@ Bet on real-world outcomes. This is where AI agents have a genuine edge — you'
 
 ## Jupiter Prediction API
 
-| Endpoint | Method | What |
-|----------|--------|------|
-| `/events` | GET | List events (filter by category, status) |
-| `/events/search` | GET | Search by keyword |
-| `/markets/{id}` | GET | Market details, pricing, orderbook |
-| `/orderbook/{id}` | GET | Bid/ask depth |
-| `/orders` | POST | Buy YES/NO contracts |
-| `/positions` | GET | Your holdings + P&L |
-| `/positions/{id}` | DELETE | Close position |
-| `/positions/{id}/claim` | POST | Claim winning payout |
+**Note:** These endpoints are NOT yet exposed as MCP tools. The agent can browse events via WebFetch (GET requests), but placing orders and managing positions requires signed transactions that aren't wired up yet. For now, the agent can research and recommend bets, but execution is manual or via the Jupiter UI.
+
+| Endpoint | Method | Agent Can Call? | What |
+|----------|--------|----------------|------|
+| `/events` | GET | Yes (WebFetch) | List events (filter by category, status) |
+| `/events/search` | GET | Yes (WebFetch) | Search by keyword |
+| `/markets/{id}` | GET | Yes (WebFetch) | Market details, pricing, orderbook |
+| `/orderbook/{id}` | GET | Yes (WebFetch) | Bid/ask depth |
+| `/orders` | POST | **No** | Buy YES/NO contracts (needs signing) |
+| `/positions` | GET | **No** | Your holdings + P&L (needs auth) |
+| `/positions/{id}/claim` | POST | **No** | Claim winning payout (needs signing) |
 
 Fees scale with uncertainty — contracts near $0.50 cost more to trade. No fees on claiming payouts.
+
+**Futarchy markets ARE executable** — use `solana_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
 
 ## The Only Rule: Edge
 

@@ -1,7 +1,7 @@
 ---
 name: outsmart-lp-sniping
 description: Evaluate and buy tokens at or near LP creation on Solana. Use when user says "snipe", "sniping", "bonding curve", "graduation", "migration", "new pool", "LP created", "snipe LP", "bloom bot", "set up snipe", "pump fun", "launchlab", or mentions buying a token the instant its LP pool goes live.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, WebFetch
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__solana_list_dexes, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -35,7 +35,7 @@ You won't get block-0, but if you're watching a curve at 95% and buy within seco
 
 ## What to Snipe
 
-**PumpFun graduation** — most common target. Bonding curve fills to 100%, migrates to Raydium AMM. Look for: 80%+ progress, active community, dev hasn't sold, fits current meta, smart money is in the curve.
+**PumpFun graduation** — most common target. Bonding curve fills to 100%, migrates to PumpSwap (PumpFun's own AMM). Look for: 80%+ progress, active community, dev hasn't sold, fits current meta, smart money is in the curve.
 
 **LaunchLab** — same pattern, graduates to Raydium CPMM.
 

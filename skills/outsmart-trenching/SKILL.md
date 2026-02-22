@@ -123,7 +123,7 @@ Flags: `HAS_FREEZE_AUTHORITY`, `HAS_MINT_AUTHORITY`, `LOW_ORGANIC_ACTIVITY`
 ### After — The LP Play
 
 If the token has legs:
-1. **< 5 min, big volume** → create DAMM v2 pool with 99% fee, capture early volume
+1. **< 5 min, big volume** → create DAMM v2 pool via `solana_create_pool` with 99% fee, capture early volume
 2. **> 30 min, established** → open DLMM position for ongoing fees
 3. Memecoin bag + LP fees = dual income from one trade
 
@@ -144,14 +144,22 @@ If the token has legs:
 
 ## The Toolkit
 
-| Tool | Use |
-|------|-----|
-| **GMGN** | Smart money, security, insider detection, first 70 buyers |
-| **Cielo** | Wallet discovery, Mindshare, alerts, 250 free wallets |
-| **Axiom** | Twitter monitor (auto-detects CAs), wallet tracking |
-| **DexScreener** | Charts, token profiles, CTO labels, boosted tokens |
-| **Bubblemaps** | Supply distribution, cluster detection |
-| **RugCheck** | Contract analysis, LP lock status |
+**What the agent can do directly (MCP tools):**
+- `solana_token_info` — DexScreener data (price, volume, buyers, liquidity, age)
+- `solana_buy` / `solana_sell` — execute trades
+- `solana_find_pool` — discover pool addresses
+- Jupiter Shield API — call via WebFetch: `GET https://api.jup.ag/ultra/v1/shield?mints={mint}`
+
+**External tools (agent can browse via WebFetch but can't fully automate):**
+
+| Tool | Use | Agent Access |
+|------|-----|-------------|
+| **GMGN** | Smart money, security, insider detection, first 70 buyers | Browse via WebFetch (gmgn.ai) |
+| **Cielo** | Wallet discovery, Mindshare, alerts | Requires account |
+| **Axiom** | Twitter monitor (auto-detects CAs) | Requires account |
+| **DexScreener** | Charts, token profiles, boosted tokens | Browse via WebFetch |
+| **Bubblemaps** | Supply distribution, cluster detection | Browse via WebFetch |
+| **RugCheck** | Contract analysis, LP lock status | Browse via WebFetch (rugcheck.xyz) |
 
 ## Survival Mode
 

@@ -1,7 +1,7 @@
 ---
 name: outsmart-dex-trading
 description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "wallet balance", or mentions trading tokens on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
 model: opus
 license: ISC
 metadata:
@@ -20,6 +20,10 @@ This is your tool reference. 10 MCP tools, 18 DEX adapters, and the patterns for
 | `solana_buy` | Buy tokens with SOL | `dex`, `pool` or `token`, `amount` |
 | `solana_sell` | Sell tokens for SOL | `dex`, `pool` or `token`, `percentage` |
 | `solana_quote` | On-chain price check | `dex`, `pool` |
+| `solana_snipe` | Competitive buy with Jito MEV tip | `dex`, `pool`, `token`, `amount`, `tip_sol` |
+| `solana_find_pool` | Find pool address for a token pair | `dex`, `base_mint` |
+| `solana_create_pool` | Create DAMM v2 pool (Meteora) | `mode`, `base_mint`, fee params |
+| `solana_create_token` | Launch token on PumpFun | `name`, `symbol`, `metadata_uri` |
 | `solana_add_liquidity` | Deposit into a pool | `dex`, `pool`, `amount_sol` |
 | `solana_remove_liquidity` | Withdraw from a pool | `dex`, `pool`, `percentage` |
 | `solana_claim_fees` | Collect LP fees | `dex`, `pool` |
@@ -40,7 +44,7 @@ This is your tool reference. 10 MCP tools, 18 DEX adapters, and the patterns for
 | LP on Meteora concentrated bins | `meteora-dlmm` | DLMM-specific position management |
 | LP on Meteora full-range | `meteora-damm-v2` | Full LP lifecycle |
 | Raydium pools | `raydium-cpmm` / `raydium-clmm` / `raydium-amm-v4` | Direct on-chain, match the pool type |
-| PumpFun graduated tokens | `pumpfun-amm` | Raydium AMM pools from PumpFun |
+| PumpFun graduated tokens | `pumpfun-amm` | PumpSwap AMM pools |
 | PumpFun bonding curve | `pumpfun` | Pre-graduation, includes `create()` |
 | Orca Whirlpools | `orca` | Concentrated liquidity on Orca |
 | Unknown token | Check `solana_token_info` first | Know what you're buying |
@@ -92,6 +96,64 @@ Same params as buy, but `percentage` (0-100) instead of `amount`.
 ```
 
 Returns price, base/quote mints, timestamp.
+
+### solana_find_pool
+
+```json
+{ "dex": "meteora-damm-v2", "base_mint": "TOKEN_MINT" }
+```
+
+Returns pool address, base/quote mints, liquidity. Returns `{ found: false }` if no pool exists — useful for checking if you should create one.
+
+### solana_snipe
+
+```json
+{ "dex": "meteora-damm-v2", "pool": "POOL", "token": "MINT", "amount": 0.05, "tip_sol": 0.005 }
+```
+
+Same as `solana_buy` but with mandatory Jito MEV tip for priority execution. Use when speed matters.
+
+### solana_create_pool
+
+Create a new DAMM v2 pool on Meteora. Two modes:
+
+**Custom** (full fee control):
+```json
+{
+  "mode": "custom",
+  "base_mint": "TOKEN_MINT",
+  "base_amount": 1000000,
+  "quote_amount": 0.5,
+  "max_base_fee_bps": 9900,
+  "min_base_fee_bps": 200,
+  "total_duration": 86400,
+  "number_of_period": 100,
+  "fee_scheduler_mode": 0,
+  "use_dynamic_fee": true,
+  "collect_fee_mode": 1
+}
+```
+
+**Config** (pre-existing on-chain config):
+```json
+{
+  "mode": "config",
+  "base_mint": "TOKEN_MINT",
+  "base_amount": 1000000,
+  "quote_amount": 0.5,
+  "config_address": "2yAJha5NVgq5mEitTUvdWSUKrcYvxAAc2H6rPDbEQqSu"
+}
+```
+
+### solana_create_token
+
+Create a new token on PumpFun with a bonding curve. Graduates to PumpSwap at ~85 SOL.
+
+```json
+{ "name": "My Token", "symbol": "MYTOKEN", "metadata_uri": "https://arweave.net/..." }
+```
+
+Returns the new mint address in `positionAddress` and bonding curve PDA in `poolAddress`.
 
 ### solana_add_liquidity
 
@@ -146,11 +208,23 @@ Returns from DexScreener: name, price, mcap, volume (5m/1h/6h/24h), buyers, liqu
 3. solana_buy(dex="jupiter-ultra", token, amount) → execute
 ```
 
+**Find a pool (don't know the address):**
+```
+1. solana_find_pool(dex, base_mint) → get pool address
+```
+
 **Provide liquidity:**
 ```
 1. solana_quote(dex, pool) → current price
 2. solana_add_liquidity(dex, pool, amount_sol, strategy, bins)
 3. solana_list_positions(dex, pool) → verify
+```
+
+**Create a DAMM v2 pool (first LP alpha):**
+```
+1. solana_find_pool(dex="meteora-damm-v2", base_mint) → check if pool exists
+2. If not found → solana_create_pool(mode="custom", base_mint, ...) → create with 99% fee
+3. solana_add_liquidity → add more LP if needed
 ```
 
 **Exit LP:**

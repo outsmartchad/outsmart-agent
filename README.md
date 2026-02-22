@@ -10,7 +10,7 @@ npx outsmart-agent
 
 An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
 
-10 MCP tools for execution. 8 AI skills that teach the agent **when** and **why**, not just how.
+14 MCP tools for execution. 8 AI skills that teach the agent **when** and **why**, not just how.
 
 ## Quick Start
 
@@ -56,6 +56,10 @@ npx skills add outsmartchad/outsmart-agent
 | `solana_buy` | Buy tokens with SOL on any DEX |
 | `solana_sell` | Sell tokens (percentage-based) |
 | `solana_quote` | On-chain price from a pool |
+| `solana_snipe` | Competitive buy with Jito MEV tip |
+| `solana_find_pool` | Find pool address for a token pair |
+| `solana_create_pool` | Create DAMM v2 pool on Meteora |
+| `solana_create_token` | Launch token on PumpFun |
 | `solana_add_liquidity` | Add LP (DLMM bins, DAMM v2 full-range) |
 | `solana_remove_liquidity` | Remove LP |
 | `solana_claim_fees` | Collect swap fees from LP |
@@ -86,7 +90,7 @@ npx skills add outsmartchad/outsmart-agent
 **Aggregators:** jupiter-ultra, dflow
 **Raydium:** amm-v4, cpmm, clmm, launchlab
 **Meteora:** damm-v2, dlmm, damm-v1, dbc
-**PumpFun:** amm, bonding curve
+**PumpFun:** pumpswap amm, bonding curve
 **Others:** orca, pancakeswap-clmm, byreal-clmm, fusion-amm, futarchy-amm, futarchy-launchpad
 
 ## Architecture
@@ -94,7 +98,7 @@ npx skills add outsmartchad/outsmart-agent
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (10 tools, ~320 lines)
+18 DEX adapters             MCP server (14 tools)
 TX landing providers        8 AI skills
 Wallet + TX helpers         Agent definition
 DexScreener API             Plugin manifest
@@ -129,7 +133,7 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 
 ## Roadmap
 
-- [x] MCP Server — 10 tools, 18 DEX adapters
+- [x] MCP Server — 14 tools, 18 DEX adapters
 - [x] AI Skills — 8 strategy skills
 - [x] Claude Code Plugin manifest
 - [ ] Event Streaming — Yellowstone gRPC for real-time pool creation
