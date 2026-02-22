@@ -1,7 +1,7 @@
 ---
 name: outsmart-dex-trading
 description: Execute trades on Solana DEXes. Use when user says "buy token", "sell token", "swap", "add liquidity", "remove liquidity", "claim fees", "LP", "DEX", "pool", "Solana trade", "check price", "wallet balance", or mentions trading tokens on Solana.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_snipe, mcp__outsmart-agent__solana_find_pool, mcp__outsmart-agent__solana_create_pool, mcp__outsmart-agent__solana_create_token, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_list_dexes, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
 model: opus
 license: ISC
 metadata:
@@ -11,9 +11,9 @@ metadata:
 
 # Solana DEX Trading
 
-This is your tool reference. 10 MCP tools, 18 DEX adapters, and the patterns for using them.
+This is your tool reference. 23 MCP tools (14 DEX + 9 Jupiter), 18 DEX adapters, and the patterns for using them.
 
-## Tools at a Glance
+## DEX Tools at a Glance
 
 | Tool | What It Does | Key Params |
 |------|-------------|------------|
@@ -31,6 +31,20 @@ This is your tool reference. 10 MCP tools, 18 DEX adapters, and the patterns for
 | `solana_token_info` | DexScreener market data | `token` |
 | `solana_list_dexes` | All 18 adapters + capabilities | |
 | `solana_wallet_balance` | SOL and token balances | |
+
+## Jupiter Tools
+
+| Tool | What It Does | Key Params |
+|------|-------------|------------|
+| `jupiter_shield` | Token security warnings | `mints` |
+| `jupiter_prediction_events` | Browse/search prediction markets | `category`, `status`, `query` |
+| `jupiter_prediction_market` | Market details + orderbook | `market_id` |
+| `jupiter_prediction_order` | Place prediction market orders | `market_id`, `side`, `outcome`, `amount` |
+| `jupiter_prediction_positions` | Your positions + trade history | |
+| `jupiter_prediction_claim` | Claim resolved market winnings | `market_id` |
+| `jupiter_dca_create` | Create recurring DCA order | `input_mint`, `output_mint`, `total_amount`, `number_of_orders`, `interval_seconds` |
+| `jupiter_dca_list` | List active/historical DCA orders | `status` |
+| `jupiter_dca_cancel` | Cancel a DCA order | `order` |
 
 ## Picking the Right DEX
 

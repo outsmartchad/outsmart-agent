@@ -1,7 +1,7 @@
 ---
 name: outsmart-dca-grid
 description: Dollar-cost average and grid trade on Solana. Use when user says "DCA", "dollar cost average", "grid", "accumulate", "buy the dip", "range trading", "recurring", or mentions systematic buying strategies.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
 model: opus
 license: ISC
 metadata:
@@ -15,17 +15,27 @@ Two ways to take emotion out of trading. Jupiter's DCA runs on autopilot. DLMM g
 
 ## DCA — Dollar-Cost Averaging
 
-### Jupiter Recurring (Recommended — but not yet MCP-executable)
+### Jupiter Recurring (Recommended — Fully MCP-Executable)
 
-**Note:** Jupiter Recurring API is NOT yet exposed as MCP tools. Creating and cancelling orders requires signed transactions. The agent can check order status via WebFetch but can't create orders autonomously yet. Use the Jupiter UI or CLI to set up recurring orders, then the agent can monitor them.
+Jupiter DCA is fully autonomous via MCP tools. Create orders, monitor them, cancel if needed — all from the agent.
 
-- `POST /recurring/v1/createOrder` — **not MCP-executable** (needs signing)
-- `GET /recurring/v1/getRecurringOrders` — can check via WebFetch
-- `POST /recurring/v1/cancelOrder` — **not MCP-executable** (needs signing)
+| Tool | What It Does |
+|------|-------------|
+| `jupiter_dca_create` | Create a recurring DCA order (signs + submits tx) |
+| `jupiter_dca_list` | List your active or historical DCA orders |
+| `jupiter_dca_cancel` | Cancel an active order, returns remaining funds |
 
-Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it. Set it up manually, let keepers run it.
+Jupiter keepers auto-execute each swap on your schedule. 0.1% fee per swap. Min 100 USDC equivalent.
 
-### Manual DCA (Agent-Controlled)
+Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it. Set and forget.
+
+```
+1. jupiter_dca_create(input_mint="USDC", output_mint="SOL", total_amount=500, number_of_orders=10, interval_seconds=21600)
+2. jupiter_dca_list(status="active") → check progress
+3. jupiter_dca_cancel(order="ORDER_PUBKEY") → cancel if needed
+```
+
+### Manual DCA (Alternative — Agent-Controlled)
 
 Execute buys yourself on a schedule via `solana_buy`. More control — you can add conditions (only buy if price is below X, skip if gas is high, etc). Downside: agent needs to stay online.
 
@@ -41,8 +51,8 @@ Every 6 hours:
 - Fixed amount per buy: 1-3% of portfolio
 - Fixed interval — don't deviate, that defeats the purpose
 - Stop if: project dies, exploit happens, team exits
-- Prefer Jupiter Recurring for set-and-forget
-- Use manual only when you need conditional logic
+- Prefer `jupiter_dca_create` for set-and-forget — keepers handle execution
+- Use manual `solana_buy` only when you need conditional logic (price thresholds, etc.)
 
 ## Grid Trading with DLMM
 
@@ -84,7 +94,7 @@ Use one-sided DLMM positions as a grid of buy/sell orders. When price crosses a 
 ## Combining Both
 
 The strongest setup:
-1. **Jupiter Recurring DCA** accumulates a token on autopilot
+1. **`jupiter_dca_create`** accumulates a token on autopilot
 2. **DLMM grid** earns fees on the same pair
 3. **Grid fees** fund more DCA buys
 
@@ -93,7 +103,7 @@ Self-reinforcing loop: DCA builds position → grid earns fees → fees fund mor
 ## Survival Mode
 
 - **Normal:** Full DCA + active grids
-- **Low Compute:** Keep Jupiter Recurring (it's automated). Wider grids, fewer rebalances.
+- **Low Compute:** Keep Jupiter DCA running (keepers handle it). Wider grids, fewer rebalances.
 - **Critical:** Cancel all DCA. Remove all grids. Liquidate. Survive.
 
 ## Related Skills

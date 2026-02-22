@@ -10,7 +10,7 @@ npx outsmart-agent
 
 An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
 
-14 MCP tools for execution. 8 AI skills that teach the agent **when** and **why**, not just how.
+23 MCP tools for execution. 8 AI skills that teach the agent **when** and **why**, not just how.
 
 ## Quick Start
 
@@ -51,6 +51,8 @@ npx skills add outsmartchad/outsmart-agent
 
 ## MCP Tools
 
+### DEX Tools (14)
+
 | Tool | What |
 |------|------|
 | `solana_buy` | Buy tokens with SOL on any DEX |
@@ -67,6 +69,20 @@ npx skills add outsmartchad/outsmart-agent
 | `solana_token_info` | DexScreener market data |
 | `solana_list_dexes` | All 18 adapters + capabilities |
 | `solana_wallet_balance` | SOL and token balances |
+
+### Jupiter Tools (9)
+
+| Tool | What |
+|------|------|
+| `jupiter_shield` | Token security warnings |
+| `jupiter_prediction_events` | Browse/search prediction market events |
+| `jupiter_prediction_market` | Market details + orderbook depth |
+| `jupiter_prediction_order` | Place buy/sell orders on prediction markets |
+| `jupiter_prediction_positions` | Your positions + trade history |
+| `jupiter_prediction_claim` | Claim winnings from resolved markets |
+| `jupiter_dca_create` | Create recurring DCA order |
+| `jupiter_dca_list` | List active/historical DCA orders |
+| `jupiter_dca_cancel` | Cancel a DCA order |
 
 ## Skills
 
@@ -98,7 +114,7 @@ npx skills add outsmartchad/outsmart-agent
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (14 tools)
+18 DEX adapters             MCP server (23 tools)
 TX landing providers        8 AI skills
 Wallet + TX helpers         Agent definition
 DexScreener API             Plugin manifest
@@ -128,12 +144,12 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 |----------|----------|-------------|
 | `PRIVATE_KEY` | Yes | Base58 Solana private key |
 | `MAINNET_ENDPOINT` | Yes | Solana RPC (Helius, Triton, etc.) |
-| `JUPITER_API_KEY` | No | Jupiter Ultra |
+| `JUPITER_API_KEY` | No | Jupiter Ultra, Shield, Prediction, DCA |
 | `DFLOW_API_KEY` | No | DFlow |
 
 ## Roadmap
 
-- [x] MCP Server — 14 tools, 18 DEX adapters
+- [x] MCP Server — 23 tools (14 DEX + 9 Jupiter), 18 DEX adapters
 - [x] AI Skills — 8 strategy skills
 - [x] Claude Code Plugin manifest
 - [ ] Event Streaming — Yellowstone gRPC for real-time pool creation

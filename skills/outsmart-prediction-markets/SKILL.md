@@ -1,7 +1,7 @@
 ---
 name: outsmart-prediction-markets
 description: Trade prediction markets on Solana via Jupiter (which integrates Polymarket) and MetaDAO Futarchy. Use when user says "prediction", "prediction market", "bet", "forecast", "Polymarket", "Jupiter markets", "binary outcome", "will X happen", "probability", "odds", "futarchy", "decision market", or mentions betting on real-world events.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, WebFetch
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, WebFetch
 model: opus
 license: ISC
 metadata:
@@ -21,23 +21,33 @@ Bet on real-world outcomes. This is where AI agents have a genuine edge — you'
 
 **MetaDAO Futarchy** — Different game. Governance markets — "will this proposal make the token go up?" Two conditional markets (pass vs fail), the winning market determines the governance outcome. Outsmart has a `futarchy-amm` adapter for direct trading.
 
-## Jupiter Prediction API
+## MCP Tools
 
-**Note:** These endpoints are NOT yet exposed as MCP tools. The agent can browse events via WebFetch (GET requests), but placing orders and managing positions requires signed transactions that aren't wired up yet. For now, the agent can research and recommend bets, but execution is manual or via the Jupiter UI.
+All Jupiter Prediction operations are fully MCP-executable. The agent can browse, bet, and claim autonomously.
 
-| Endpoint | Method | Agent Can Call? | What |
-|----------|--------|----------------|------|
-| `/events` | GET | Yes (WebFetch) | List events (filter by category, status) |
-| `/events/search` | GET | Yes (WebFetch) | Search by keyword |
-| `/markets/{id}` | GET | Yes (WebFetch) | Market details, pricing, orderbook |
-| `/orderbook/{id}` | GET | Yes (WebFetch) | Bid/ask depth |
-| `/orders` | POST | **No** | Buy YES/NO contracts (needs signing) |
-| `/positions` | GET | **No** | Your holdings + P&L (needs auth) |
-| `/positions/{id}/claim` | POST | **No** | Claim winning payout (needs signing) |
+| Tool | What It Does |
+|------|-------------|
+| `jupiter_prediction_events` | Browse/search events by category, status, or keyword |
+| `jupiter_prediction_market` | Get market details, pricing, and orderbook depth |
+| `jupiter_prediction_order` | Place buy/sell orders on YES/NO contracts (signs + submits tx) |
+| `jupiter_prediction_positions` | List your positions, open orders, and trade history |
+| `jupiter_prediction_claim` | Claim winnings from resolved markets |
+| `jupiter_shield` | Check token security warnings (useful for market research) |
 
 Fees scale with uncertainty — contracts near $0.50 cost more to trade. No fees on claiming payouts.
 
-**Futarchy markets ARE executable** — use `solana_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
+**Futarchy markets** use a different path — `solana_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
+
+### Workflow
+
+```
+1. jupiter_prediction_events(category="crypto") → find interesting markets
+2. jupiter_prediction_market(market_id) → check pricing, orderbook depth
+3. Research the question (WebFetch, solana_token_info, etc.)
+4. jupiter_prediction_order(market_id, side="buy", outcome="yes", amount=10) → bet
+5. jupiter_prediction_positions() → track your positions
+6. jupiter_prediction_claim(market_id) → collect when market resolves
+```
 
 ## The Only Rule: Edge
 

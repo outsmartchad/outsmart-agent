@@ -2,22 +2,28 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 14 MCP tools wrapping the `outsmart` trading library.
+ * Exposes 23 MCP tools wrapping the `outsmart` trading library + Jupiter APIs.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
- * Tools:
+ * DEX Tools (14):
  *   solana_buy, solana_sell, solana_quote, solana_find_pool, solana_snipe,
  *   solana_create_pool, solana_create_token,
  *   solana_add_liquidity, solana_remove_liquidity, solana_claim_fees,
  *   solana_list_positions, solana_token_info, solana_list_dexes,
  *   solana_wallet_balance
+ *
+ * Jupiter Tools (9):
+ *   jupiter_shield,
+ *   jupiter_prediction_events, jupiter_prediction_market,
+ *   jupiter_prediction_order, jupiter_prediction_positions, jupiter_prediction_claim,
+ *   jupiter_dca_create, jupiter_dca_list, jupiter_dca_cancel
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 
 import {
   getDexAdapter,
@@ -28,6 +34,7 @@ import {
   checkBalanceByAddress,
   getSPLTokenBalance,
   getInfoFromDexscreener,
+  PumpFunAdapter,
   type IDexAdapter,
   type DexCapabilities,
 } from "outsmart";
@@ -539,8 +546,8 @@ server.tool(
   },
   async (args) => {
     try {
-      const adapter = getAdapter("pumpfun") as any;
-      if (!adapter.create) {
+      const adapter = getAdapter("pumpfun");
+      if (!(adapter instanceof PumpFunAdapter)) {
         return err("pumpfun adapter does not support create");
       }
       const result = await adapter.create(args.name, args.symbol, args.metadata_uri);
@@ -548,6 +555,367 @@ server.tool(
         ...result,
         note: "positionAddress is the new token mint address. poolAddress is the bonding curve PDA.",
       });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Jupiter API helpers
+// ---------------------------------------------------------------------------
+
+function getJupiterApiKey(): string {
+  const key = process.env.JUPITER_API_KEY;
+  if (!key) throw new Error("JUPITER_API_KEY env var is required for Jupiter API calls. Get one at https://portal.jup.ag");
+  return key;
+}
+
+async function jupiterGet(path: string, baseUrl = "https://api.jup.ag"): Promise<any> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: { "x-api-key": getJupiterApiKey() },
+  });
+  if (!res.ok) throw new Error(`Jupiter API ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function jupiterPost(path: string, body: any, baseUrl = "https://api.jup.ag"): Promise<any> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": getJupiterApiKey() },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Jupiter API ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function jupiterDelete(path: string, body?: any, baseUrl = "https://api.jup.ag"): Promise<any> {
+  const opts: RequestInit = {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "x-api-key": getJupiterApiKey() },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${baseUrl}${path}`, opts);
+  if (!res.ok) throw new Error(`Jupiter API ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+/** Deserialize a base64 VersionedTransaction, sign it, and send on-chain */
+async function signAndSendJupiterTx(base64Tx: string): Promise<string> {
+  const wallet = getWallet();
+  const connection = getConnection();
+  const tx = VersionedTransaction.deserialize(Buffer.from(base64Tx, "base64"));
+  tx.sign([wallet]);
+  const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true });
+  await connection.confirmTransaction(sig, "confirmed");
+  return sig;
+}
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_shield
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_shield",
+  "Check token security warnings via Jupiter Shield API. Returns freeze authority, mint authority, organic activity warnings. Quick safety check — no signing needed.",
+  {
+    mints: z.string().describe("Comma-separated token mint addresses to check (e.g. 'MINT1,MINT2')"),
+  },
+  async (args) => {
+    try {
+      const result = await jupiterGet(`/ultra/v1/shield?mints=${args.mints}`);
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_prediction_events
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "jupiter_prediction_events",
+  "Browse prediction market events on Jupiter. Returns events with markets, pricing, and status. Use to find betting opportunities.",
+  {
+    category: z.string().optional().describe("Filter by category: crypto, sports, politics, esports, culture, economics, tech"),
+    status: z.enum(["active", "resolved", "all"]).optional().describe("Event status filter (default: active)"),
+    query: z.string().optional().describe("Search query (if provided, uses search endpoint instead)"),
+    limit: z.number().int().min(1).max(50).optional().describe("Max results (default: 10)"),
+  },
+  async (args) => {
+    try {
+      if (args.query) {
+        const result = await jupiterGet(`/prediction/v1/events/search?query=${encodeURIComponent(args.query)}&limit=${args.limit ?? 10}`);
+        return ok(result);
+      }
+      let path = `/prediction/v1/events?includeMarkets=true&limit=${args.limit ?? 10}`;
+      if (args.category) path += `&category=${args.category}`;
+      if (args.status) path += `&filter=${args.status}`;
+      const result = await jupiterGet(path);
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_prediction_market
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_prediction_market",
+  "Get details for a specific prediction market — pricing, orderbook depth, volume, open interest.",
+  {
+    market_id: z.string().describe("Market ID from jupiter_prediction_events"),
+    include_orderbook: z.boolean().optional().describe("Also fetch orderbook depth (default: false)"),
+  },
+  async (args) => {
+    try {
+      const market = await jupiterGet(`/prediction/v1/markets/${args.market_id}`);
+      if (args.include_orderbook) {
+        const orderbook = await jupiterGet(`/prediction/v1/orderbook/${args.market_id}`);
+        return ok({ market, orderbook });
+      }
+      return ok(market);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_prediction_order
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "jupiter_prediction_order",
+  "Place a buy or sell order on a Jupiter prediction market. Signs and submits a Solana transaction. Returns order details and tx signature.",
+  {
+    market_id: z.string().describe("Market ID to trade on"),
+    is_yes: z.boolean().describe("true = YES contract, false = NO contract"),
+    is_buy: z.boolean().describe("true = buy contracts, false = sell contracts"),
+    deposit_amount: z.number().positive().describe("Amount in USD (e.g. 5.0 for $5). Will be converted to micro-USD internally."),
+    deposit_mint: z.string().optional().describe("Deposit token mint. Default: USDC (EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+      const depositMint = args.deposit_mint ?? "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+      // Convert USD to micro-USD (1 USD = 1,000,000 micro-USD)
+      const microUsd = Math.round(args.deposit_amount * 1_000_000);
+
+      const response = await jupiterPost("/prediction/v1/orders", {
+        ownerPubkey: wallet.publicKey.toBase58(),
+        marketId: args.market_id,
+        isYes: args.is_yes,
+        isBuy: args.is_buy,
+        depositAmount: microUsd,
+        depositMint: depositMint,
+      });
+
+      if (!response.transaction) {
+        return ok(response); // May return error info
+      }
+
+      const signature = await signAndSendJupiterTx(response.transaction);
+
+      return ok({
+        signature,
+        order: response.order,
+        note: "Order submitted on-chain. Jupiter keepers will match it. Poll jupiter_prediction_positions to check fill status.",
+      });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_prediction_positions
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_prediction_positions",
+  "List your open prediction market positions with P&L. Also shows pending orders and trade history.",
+  {
+    include_orders: z.boolean().optional().describe("Also fetch open orders (default: false)"),
+    include_history: z.boolean().optional().describe("Also fetch trade history (default: false)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+      const pubkey = wallet.publicKey.toBase58();
+      const positions = await jupiterGet(`/prediction/v1/positions?ownerPubkey=${pubkey}`);
+      const result: any = { positions };
+
+      if (args.include_orders) {
+        result.orders = await jupiterGet(`/prediction/v1/orders?ownerPubkey=${pubkey}`);
+      }
+      if (args.include_history) {
+        result.history = await jupiterGet(`/prediction/v1/history?ownerPubkey=${pubkey}`);
+      }
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_prediction_claim
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_prediction_claim",
+  "Claim winnings from a resolved prediction market position. Signs and submits the claim transaction.",
+  {
+    position_pubkey: z.string().describe("Position public key to claim (from jupiter_prediction_positions)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+      const response = await jupiterPost(`/prediction/v1/positions/${args.position_pubkey}/claim`, {
+        ownerPubkey: wallet.publicKey.toBase58(),
+      });
+
+      if (!response.transaction) {
+        return ok(response);
+      }
+
+      const signature = await signAndSendJupiterTx(response.transaction);
+      return ok({ signature, claimed: true });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_dca_create
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_dca_create",
+  "Create a Jupiter Recurring DCA order. Automated dollar-cost averaging — Jupiter keeper bots execute swaps on schedule. 0.1% fee per swap.",
+  {
+    input_mint: z.string().describe("Token to spend (e.g. USDC mint for buying SOL with USDC)"),
+    output_mint: z.string().describe("Token to receive (e.g. SOL mint)"),
+    total_amount: z.number().positive().describe("Total amount to DCA (in input token's human-readable units, e.g. 100 for 100 USDC)"),
+    input_decimals: z.number().int().min(0).max(18).describe("Decimals of the input token (6 for USDC, 9 for SOL)"),
+    number_of_orders: z.number().int().min(2).describe("Number of DCA cycles (total_amount split evenly)"),
+    interval_seconds: z.number().int().positive().describe("Seconds between each cycle (86400 = daily, 3600 = hourly)"),
+    min_price: z.number().positive().optional().describe("Only execute if price is above this (optional)"),
+    max_price: z.number().positive().optional().describe("Only execute if price is below this (optional)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+      // Convert human-readable amount to raw amount
+      const rawAmount = Math.round(args.total_amount * Math.pow(10, args.input_decimals));
+
+      const response = await jupiterPost("/recurring/v1/createOrder", {
+        user: wallet.publicKey.toBase58(),
+        inputMint: args.input_mint,
+        outputMint: args.output_mint,
+        params: {
+          time: {
+            inAmount: rawAmount,
+            numberOfOrders: args.number_of_orders,
+            interval: args.interval_seconds,
+            minPrice: args.min_price ?? null,
+            maxPrice: args.max_price ?? null,
+            startAt: null, // start immediately
+          },
+        },
+      });
+
+      if (!response.transaction) {
+        return ok(response);
+      }
+
+      // DCA supports Jupiter's /execute endpoint
+      const tx = VersionedTransaction.deserialize(Buffer.from(response.transaction, "base64"));
+      tx.sign([wallet]);
+      const signedBase64 = Buffer.from(tx.serialize()).toString("base64");
+
+      const executeResult = await jupiterPost("/recurring/v1/execute", {
+        signedTransaction: signedBase64,
+        requestId: response.requestId,
+      });
+
+      return ok({
+        ...executeResult,
+        requestId: response.requestId,
+        note: `DCA order created: ${args.total_amount} ${args.input_mint} split into ${args.number_of_orders} orders, every ${args.interval_seconds}s. Jupiter keepers will auto-execute.`,
+      });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_dca_list
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "jupiter_dca_list",
+  "List your active or historical Jupiter DCA orders.",
+  {
+    status: z.enum(["active", "history"]).optional().describe("Filter by status (default: active)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+      const status = args.status ?? "active";
+      const result = await jupiterGet(`/recurring/v1/getRecurringOrders?user=${wallet.publicKey.toBase58()}&orderStatus=${status}&recurringType=time`);
+      return ok(result);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: jupiter_dca_cancel
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "jupiter_dca_cancel",
+  "Cancel an active Jupiter DCA order. Returns remaining funds to your wallet.",
+  {
+    order: z.string().describe("Order public key to cancel (from jupiter_dca_list)"),
+  },
+  async (args) => {
+    try {
+      const wallet = getWallet();
+
+      const response = await jupiterPost("/recurring/v1/cancelOrder", {
+        order: args.order,
+        user: wallet.publicKey.toBase58(),
+        recurringType: "time",
+      });
+
+      if (!response.transaction) {
+        return ok(response);
+      }
+
+      const tx = VersionedTransaction.deserialize(Buffer.from(response.transaction, "base64"));
+      tx.sign([wallet]);
+      const signedBase64 = Buffer.from(tx.serialize()).toString("base64");
+
+      const executeResult = await jupiterPost("/recurring/v1/execute", {
+        signedTransaction: signedBase64,
+        requestId: response.requestId,
+      });
+
+      return ok({ ...executeResult, cancelled: true });
     } catch (e: any) {
       return err(e.message);
     }

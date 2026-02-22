@@ -18,11 +18,14 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-14 tools over stdio transport:
+23 tools over stdio transport (14 DEX + 9 Jupiter):
 - `solana_buy`, `solana_sell`, `solana_quote`, `solana_snipe`
 - `solana_find_pool`, `solana_create_pool`, `solana_create_token`
 - `solana_add_liquidity`, `solana_remove_liquidity`, `solana_claim_fees`, `solana_list_positions`
 - `solana_token_info`, `solana_list_dexes`, `solana_wallet_balance`
+- `jupiter_shield`, `jupiter_prediction_events`, `jupiter_prediction_market`
+- `jupiter_prediction_order`, `jupiter_prediction_positions`, `jupiter_prediction_claim`
+- `jupiter_dca_create`, `jupiter_dca_list`, `jupiter_dca_cancel`
 
 ### AI Skills (`skills/`)
 8 strategy skills with YAML frontmatter:
@@ -48,7 +51,7 @@ outsmart-agent/
 ├── src/
 │   ├── index.ts              # Library entry (re-exports from outsmart)
 │   └── mcp/
-│       └── server.ts         # MCP server (10 tools, ~320 lines)
+│       └── server.ts         # MCP server (23 tools, ~940 lines)
 ├── skills/
 │   ├── outsmart-dex-trading/
 │   │   ├── SKILL.md          # Core trading skill
@@ -97,7 +100,7 @@ Co-authored-by: Claude Code <noreply@anthropic.com>
 |----------|----------|-------------|
 | `PRIVATE_KEY` | Yes | Base58 Solana private key |
 | `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint |
-| `JUPITER_API_KEY` | No | Jupiter Ultra adapter |
+| `JUPITER_API_KEY` | No | Jupiter Ultra, Shield, Prediction, DCA |
 | `DFLOW_API_KEY` | No | DFlow adapter |
 
 ## Related
