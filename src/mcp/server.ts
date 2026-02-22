@@ -21,6 +21,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   getDexAdapter,
   listDexAdapters,
+  registerAllAdapters,
   getWallet,
   getConnection,
   checkBalanceByAddress,
@@ -383,6 +384,9 @@ server.tool(
 // ---------------------------------------------------------------------------
 
 async function main() {
+  // Register all 18 DEX adapters from the outsmart library
+  await registerAllAdapters();
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 

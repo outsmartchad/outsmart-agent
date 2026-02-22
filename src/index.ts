@@ -15,6 +15,7 @@ export {
   getDexAdapter,
   listDexAdapters,
   registerAdapter,
+  registerAllAdapters,
 
   // Types
   type IDexAdapter,
