@@ -53,11 +53,11 @@ OpenClaw/claw meta, Moltbook, aliens, AI agents (GOAT, ai16z — this one ran fo
 
 Copycats with zero effort die fast.
 
-## Before You Buy — Security Gate
+## Sizing Up a Token
 
-The narrative is hot, the token looks good. Now make sure it's not a rug.
+Don't let security checks slow you down. If the meta is moving, buy first in small size, dig deeper after.
 
-### Quick Check
+### Quick glance (before or right after buying)
 
 ```
 solana_token_info(token) → DexScreener data
@@ -71,28 +71,15 @@ solana_token_info(token) → DexScreener data
 | Age | 10min - 6h | < 2min or > 24h with no momentum |
 | Market cap | $50k - $5M | > $50M (you're late) |
 
-### Security Checklist
+### Deeper checks (after you're in, to decide hold vs dump)
 
-**GMGN:**
-- MintDisable = Yes (creator can't inflate supply)
-- Top10 hold < 30% (not concentrated)
-- Blacklist = No (can't freeze your tokens)
-- LP burned 100% (can't pull liquidity)
-- Dev rug history = clean
-- Snipers in first blocks holding >5% = coordinated dump incoming
+**GMGN** — MintDisable, Top10 hold, Blacklist, LP burn %, dev rug history, sniper analysis. If something looks bad, sell and move on. You got in small.
 
-**Jupiter Shield API:**
-```
-GET /ultra/v1/shield?mints={mint}
-```
-Flags: `HAS_FREEZE_AUTHORITY`, `HAS_MINT_AUTHORITY`, `LOW_ORGANIC_ACTIVITY`
+**Jupiter Shield** — `GET https://api.jup.ag/ultra/v1/shield?mints={mint}` via WebFetch. Flags freeze/mint authority, low organic activity.
 
-**Activity:**
-- 60+ trades in first minute = real
-- 600+ trades in 5 minutes = strong organic
-- Below these thresholds = likely wash
+**Activity thresholds** — 60+ trades in first minute = real. 600+ in 5 min = strong organic. Below that = probably wash.
 
-**Any critical red flag = skip.** There are always multiple tokens per meta. Find a clean one.
+These checks help you decide whether to **add more** or **get out** — not whether to enter in the first place. The narrative and timing are what get you in. The security info tells you how long to stay.
 
 ## Execution
 
