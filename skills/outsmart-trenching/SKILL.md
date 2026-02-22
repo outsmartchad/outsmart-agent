@@ -48,13 +48,41 @@ Good trenchers don't trade blind. They use an ecosystem of tools for signal dete
 
 ## Research Before Entry — The Pro Trencher's Checklist
 
-### Step 1: Token Intel
+**The order matters.** Good trenchers find the narrative first, then verify safety before buying. The agent should be constantly scanning for what's hot — security is the gate before you buy, not the starting point.
+
+### Step 1: Find the Heat (Always Be Scanning)
+
+**This is the most important step.** The agent should be continuously monitoring for what's going viral RIGHT NOW:
+
+**Twitter/X monitoring (primary signal source):**
+- Watch CT for what's getting unusual engagement — a topic blowing up, a meme going viral, a product launch
+- Track KOL accounts — when multiple influencers tweet about the same thing within an hour, a meta is forming
+- Look for CAs (contract addresses) being shared in viral tweets
+- Axiom's Twitter monitor auto-detects CAs in tweets — fastest way to catch launches tied to viral moments
+
+**Smart money convergence:**
+- Build a watchlist of profitable wallets using GMGN's smart money discovery or Cielo's wallet discovery
+- Track their buys in real-time — GMGN shows notifications when tracked wallets buy new tokens
+- **When multiple smart wallets converge on the same new token** — that's a strong signal
+- Cielo Mindshare — sudden spike in activity around a token/theme = meta is heating up
+
+**News & viral content:**
+- Use WebFetch to check trending topics, viral news, product launches
+- Anything going viral in mainstream culture can spawn a meta (a game goes viral → game-themed tokens, a celeb does something → celeb tokens)
+- The faster you connect "viral thing" → "someone launched a token for it", the earlier you are
+
+**On-chain scanning:**
+- Watch GMGN "Sniper New" feed for clusters of new tokens with the same theme
+- DexScreener trending/boosted tokens
+- When you see 5+ tokens with the same narrative launching in an hour, the meta is real
+
+### Step 2: Quick Token Check
+
+Once you've spotted something hot, quickly size up the token:
 
 ```
 solana_token_info(token) → DexScreener data
 ```
-
-**What you're looking for:**
 
 | Metric | Good Sign | Bad Sign |
 |--------|----------|----------|
@@ -64,9 +92,11 @@ solana_token_info(token) → DexScreener data
 | `pairAge` | 10m-6h (sweet spot) | < 2m (too early, risky) or > 24h (momentum dead) |
 | `marketCap` | $50k-$5M (room to run) | > $50M (you're late) |
 
-### Step 2: Security Checks (Critical — Don't Skip)
+### Step 3: Security Gate (Must Pass Before Buying)
 
-**GMGN security checklist (check all of these):**
+The narrative is hot, the token looks good — now make sure it's not a rug before you ape:
+
+**GMGN security checklist:**
 
 | Check | Safe | Dangerous |
 |-------|------|-----------|
@@ -77,47 +107,24 @@ solana_token_info(token) → DexScreener data
 | **Rug probability** | Low (based on holder analysis) | High — many holders also hold previous rugs |
 | **Dev rug history** | Clean — no prior rugs | Has launched rug pulls before — instant skip |
 
-**Jupiter Shield API** — additional automated check:
+**Jupiter Shield API** — fast automated check:
 ```
 GET /ultra/v1/shield?mints={token_mint}
 ```
 Returns warnings: `HAS_FREEZE_AUTHORITY`, `HAS_MINT_AUTHORITY`, `LOW_ORGANIC_ACTIVITY`, `NOT_VERIFIED`, `NEW_LISTING`
 
-### Step 3: Insider & Sniper Analysis
+**Insider & sniper analysis (GMGN first 70 buyers):**
+- Snipers in first blocks holding >5% of supply = 90% chance of dump
+- "Scammer wallet" labels = wallets that frequently buy rug pulls (likely dev alts)
+- Insider trading ratio = wallets holding tokens without buying them (dev distributed to alts)
+- Bundled buys in same block = coordinated insider launch
 
-This is what separates good trenchers from exit liquidity:
-
-**First 70 buyers analysis (GMGN):**
-- Check who bought first — snipers in the first blocks who hold >5% of supply = 90% chance of dump
-- "Scammer wallet" labels — wallets that frequently buy rug pulls (likely dev alt wallets)
-- Insider trading ratio — wallets that hold tokens without having bought them = dev distributed supply to alt wallets to dump later
-- What % of first 70 still holding vs sold all? If most sold all → they knew something
-
-**Activity thresholds (from GMGN research):**
-- **60+ trades in first minute** = real activity, genuine interest
+**Activity thresholds:**
+- **60+ trades in first minute** = real activity
 - **600+ trades in first 5 minutes** = strong organic demand
-- Below these = likely wash trading or very low interest
+- Below these = likely wash trading
 
-**Bundled buys:** Multiple buys in the same block from related wallets = coordinated insider launch. The dev pre-loaded wallets to make it look organic. Be very cautious.
-
-### Step 4: Smart Money Signals
-
-**Copy-trading smart money** is a core trenching strategy:
-
-1. **Build a watchlist** of profitable wallets using GMGN's smart money discovery or Cielo's wallet discovery
-2. **Track their buys in real-time** — GMGN shows notifications when tracked wallets buy new tokens
-3. **When multiple smart wallets converge on the same new token** — that's a strong signal
-4. **But verify independently** — even smart money buys rugs. Always run your own security checks.
-
-**Cielo Mindshare** — proprietary metric showing how much activity a token is getting among all Cielo users. Higher Mindshare % = hotter token. Useful as a social momentum indicator.
-
-### Step 5: Social Signals (Use WebFetch)
-
-Check if the token has narrative momentum:
-- **Twitter/X:** Is there organic engagement? Multiple accounts talking about it? Or just one shill account?
-- **Telegram:** Active community or ghost town?
-- **CT influencers:** Any notable calls? (Be skeptical — paid shills exist)
-- **Community Takeover (CTO):** DexScreener shows if a token has been "taken over" by its community — this can be bullish (community-driven) but also a warning (original dev abandoned it)
+**If any critical red flag is present → SKIP. Move to the next token in the meta.** There are always multiple tokens per meta — find a clean one.
 
 ## Execution
 
