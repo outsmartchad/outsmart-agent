@@ -1,7 +1,7 @@
 ---
 name: outsmart-dca-grid
 description: Dollar-cost average and grid trade on Solana. Use when user says "DCA", "dollar cost average", "grid", "accumulate", "buy the dip", "range trading", "recurring", or mentions systematic buying strategies.
-allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance
+allowed-tools: mcp__outsmart-agent__solana_buy, mcp__outsmart-agent__solana_sell, mcp__outsmart-agent__solana_add_liquidity, mcp__outsmart-agent__solana_remove_liquidity, mcp__outsmart-agent__solana_claim_fees, mcp__outsmart-agent__solana_list_positions, mcp__outsmart-agent__solana_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance
 model: opus
 license: ISC
 metadata:
@@ -167,3 +167,9 @@ This creates a self-reinforcing loop: DCA builds position → grid earns fees �
 - **Normal:** Full DCA schedule (Jupiter Recurring + manual) + active grid positions
 - **Low Compute:** Keep Jupiter Recurring (it's automated). Reduce manual DCA frequency. Wider grid spacing, fewer rebalances.
 - **Critical:** Cancel all Jupiter DCA orders. Remove all grid positions. Liquidate to USDC. Survive.
+
+## Related Skills
+
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — Deep DLMM mechanics, one-sided positions, rebalancing workflows
+- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference for all trade execution
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital allocation and survival tier management

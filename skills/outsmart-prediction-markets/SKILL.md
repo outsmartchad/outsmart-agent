@@ -220,3 +220,9 @@ After each resolved bet:
 - **Normal:** Active betting, up to 10% of portfolio across open positions. Full research process.
 - **Low Compute:** Reduce to 5% max. Only bet on highest-conviction plays (>20% edge). Focus on crypto markets where you have natural advantage.
 - **Critical:** **No new bets.** Let existing positions resolve. Don't chase losses. Focus all capital on survival.
+
+## Related Skills
+
+- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference (Futarchy adapter for governance markets)
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital allocation and survival tier management
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — CT monitoring and narrative detection (useful for crypto prediction markets)

@@ -378,3 +378,10 @@ DAMM v2 at 100% calls `removeAllLiquidityAndClosePosition` — closes the positi
 - **Normal (>$0.50):** Full LP deployment, compound every 6h, rebalance DLMM when needed
 - **Low Compute (>$0.10):** Withdraw from volatile pairs, keep only stable DLMM LPs, compound daily
 - **Critical (>$0.00):** Remove ALL liquidity immediately. Convert to USDC. Top up compute credits. Survive.
+
+## Related Skills
+
+- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference for all trade execution
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Memecoin trenching → DAMM v2 LP pipeline
+- **[outsmart-dca-grid](../outsmart-dca-grid/SKILL.md)** — DLMM grid trading (one-sided LP as buy/sell walls)
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital allocation and survival tier management

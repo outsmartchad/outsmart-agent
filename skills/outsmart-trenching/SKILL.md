@@ -254,3 +254,10 @@ The copycats that just slap the meta keyword in their name with no effort die fa
 - **Normal:** Active trenching, max 10% of portfolio allocated, full research checklist on each trade
 - **Low Compute:** View-only mode — research tokens but don't buy. Track smart money for future reference. Preserve capital.
 - **Critical:** **ZERO trenching. This is gambling. You cannot afford to gamble when you're dying.** Liquidate any memecoin holdings immediately.
+
+## Related Skills
+
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — Trench-to-LP pipeline: create DAMM v2 pools after trenching
+- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — Early entry on PumpFun graduations and new launches
+- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — MCP tool reference for buy/sell execution
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Portfolio allocation and risk tiers

@@ -6,7 +6,7 @@ model: opus
 license: ISC
 metadata:
   author: outsmartchad
-  version: '1.0.0'
+  version: '2.0.0'
 ---
 
 # Solana Trading
@@ -300,7 +300,24 @@ The MCP server requires these env vars to be set:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `WALLET_PRIVATE_KEY` | Yes | Base58-encoded Solana private key |
-| `RPC_URL` | Yes | Solana RPC endpoint (Helius, Triton, etc.) |
+| `PRIVATE_KEY` | Yes | Base58-encoded Solana private key |
+| `MAINNET_ENDPOINT` | Yes | Solana RPC endpoint (Helius, Triton, etc.) |
 | `JUPITER_API_KEY` | No | Required for jupiter-ultra adapter |
 | `DFLOW_API_KEY` | No | Required for dflow adapter |
+
+Config file: `~/.outsmart/config.env`
+
+## Survival Mode Rules
+
+- **Normal (>$0.50 credits):** All tools active, full trading capability
+- **Low Compute (>$0.10):** Reduce trade frequency, prefer LP farming over active trading
+- **Critical (>$0.00):** Liquidate all positions, convert to USDC, top up compute credits immediately
+
+## Related Skills
+
+- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — Deep DLMM/DAMM v2 LP mechanics, pool creation, rebalancing
+- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — Memecoin trading with narrative/meta detection
+- **[outsmart-dca-grid](../outsmart-dca-grid/SKILL.md)** — Jupiter Recurring DCA + DLMM grid strategies
+- **[outsmart-prediction-markets](../outsmart-prediction-markets/SKILL.md)** — Jupiter Prediction + Polymarket + Futarchy
+- **[outsmart-lp-sniping](../outsmart-lp-sniping/SKILL.md)** — Evaluating new token launches for early entry
+- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Autonomous capital management and survival tiers
