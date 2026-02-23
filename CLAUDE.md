@@ -18,7 +18,7 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-42 tools over stdio transport (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator + 4 Polymarket):
+49 tools over stdio transport (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator + 4 Polymarket + 4 LP Manager + 3 Event Streaming):
 - `dex_buy`, `dex_sell`, `dex_quote`, `dex_snipe`
 - `dex_find_pool`, `dex_create_pool`, `dex_add_liquidity`, `dex_remove_liquidity`
 - `dex_claim_fees`, `dex_list_positions`, `dex_list_dexes`
@@ -33,21 +33,26 @@ The DeFi survival toolkit for AI agents on Solana.
 - `percolator_market_state`, `percolator_insurance_lp`
 - `percolator_keeper_start`, `percolator_keeper_stop`, `percolator_keeper_status`
 - `polymarket_search`, `polymarket_trending`, `polymarket_event`, `polymarket_orderbook`
+- `lp_manager_start`, `lp_manager_stop`, `lp_manager_status`, `lp_find_pool`
+- `stream_start`, `stream_stop`, `stream_status`
 
 ### AI Skills (`skills/`)
-9 strategy skills with YAML frontmatter:
+11 strategy skills with YAML frontmatter:
 - `outsmart-dex-trading` — Core trading reference
-- `outsmart-lp-farming` — LP deployment and yield optimization
+- `outsmart-lp-farming` — LP deployment, yield optimization, autonomous LP manager
 - `outsmart-lp-sniping` — New token launch evaluation
 - `outsmart-trenching` — Memecoin trading with social signal analysis
 - `outsmart-devving-coins` — Launching tokens on PumpFun, Jupiter Studio, LaunchLab, Meteora DBC
 - `outsmart-dca-grid` — Systematic DCA and DLMM grid strategies
 - `outsmart-prediction-markets` — Probability estimation and edge betting
-- `outsmart-survival` — Autonomous capital management and survival tiers
+- `outsmart-survival` — Survival engine: tier-aware capital allocation, strategy selection, profit pipeline
 - `outsmart-percolator-perps` — Operating perp exchanges, market creation, LP, keeper duties
+- `outsmart-airdrop-farmer` — Systematic protocol interaction for airdrop qualification
+- `outsmart-fee-service` — LP management as a service for other agents/users
 
-### Agent (`agents/`)
+### Agents (`agents/`)
 - `solana-trading-expert.md` — Read-only advisory subagent for complex trading decisions
+- `automaton-genesis.md` — Genesis prompt template for autonomous DeFi survival agents
 
 ### Plugin Manifest (`.claude-plugin/`)
 - `plugin.json` — Claude Code marketplace registration with skill/agent references
@@ -59,7 +64,7 @@ outsmart-agent/
 ├── src/
 │   ├── index.ts              # Library entry (re-exports from outsmart)
 │   └── mcp/
-│       └── server.ts         # MCP server (32 tools)
+│       └── server.ts         # MCP server (49 tools)
 ├── skills/
 │   ├── outsmart-dex-trading/
 │   │   ├── SKILL.md          # Core trading skill
@@ -71,10 +76,13 @@ outsmart-agent/
 │   ├── outsmart-devving-coins/SKILL.md
 │   ├── outsmart-dca-grid/SKILL.md
 │   ├── outsmart-prediction-markets/SKILL.md
-│   ├── outsmart-survival/SKILL.md
-│   └── outsmart-percolator-perps/SKILL.md
+│   ├── outsmart-survival/SKILL.md          # Strategy engine + survival tiers
+│   ├── outsmart-percolator-perps/SKILL.md
+│   ├── outsmart-airdrop-farmer/SKILL.md
+│   └── outsmart-fee-service/SKILL.md
 ├── agents/
-│   └── solana-trading-expert.md
+│   ├── solana-trading-expert.md
+│   └── automaton-genesis.md
 ├── .claude-plugin/
 │   └── plugin.json
 ├── CLAUDE.md / AGENTS.md (symlink)

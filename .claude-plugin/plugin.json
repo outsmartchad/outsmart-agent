@@ -22,9 +22,12 @@
     "./skills/outsmart-devving-coins",
     "./skills/outsmart-prediction-markets",
     "./skills/outsmart-survival",
-    "./skills/outsmart-percolator-perps"
+    "./skills/outsmart-percolator-perps",
+    "./skills/outsmart-airdrop-farmer",
+    "./skills/outsmart-fee-service"
   ],
   "agents": [
-    "./agents/solana-trading-expert.md"
+    "./agents/solana-trading-expert.md",
+    "./agents/automaton-genesis.md"
   ]
 }
