@@ -10,7 +10,7 @@ npx outsmart-agent
 
 An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
 
-38 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
+42 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
 
 ## Quick Start
 
@@ -114,6 +114,17 @@ npx skills add outsmartchad/outsmart-agent
 | `percolator_keeper_stop` | Stop the running keeper |
 | `percolator_keeper_status` | Get keeper stats (pushes, errors, active watchers) |
 
+### Polymarket Tools (4)
+
+| Tool | What |
+|------|------|
+| `polymarket_search` | Search prediction markets by keyword |
+| `polymarket_trending` | Discover highest-volume active events |
+| `polymarket_event` | Detailed event info by slug or ID |
+| `polymarket_orderbook` | CLOB orderbook (bids/asks) for a market token |
+
+> Polymarket tools are **read-only** — no wallet or API key needed. Uses the public Gamma API and CLOB API.
+
 ## Skills
 
 9 strategy skills that teach agents how to think about Solana DeFi:
@@ -145,14 +156,14 @@ npx skills add outsmartchad/outsmart-agent
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (38 tools)
+18 DEX adapters             MCP server (42 tools)
 Percolator perps            9 AI skills
 TX landing providers        Agent definition
 Wallet + TX helpers         Plugin manifest
 DexScreener API
 ```
 
-`outsmart-agent` imports `outsmart` as a dependency. The MCP server is a thin wrapper — validates params, calls adapter methods, returns JSON.
+`outsmart-agent` imports `outsmart` as a dependency. The MCP server is a thin wrapper — validates params, calls adapter methods, returns JSON. Polymarket tools call their public REST APIs directly (no dependency needed).
 
 ## For Autonomous Agents
 
@@ -182,12 +193,13 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 
 ## Roadmap
 
-- [x] MCP Server — 38 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator), 18 DEX adapters
+- [x] MCP Server — 42 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator + 4 Polymarket), 18 DEX adapters
 - [x] AI Skills — 9 strategy skills
 - [x] Claude Code Plugin manifest
 - [x] Percolator — Permissionless perp exchange creation, trading, LP, insurance
 - [x] Oracle Keeper — WebSocket + gRPC keeper bots (8 DEX types, real-time price feed)
 - [x] Perp Trading — High-level long/short/close tools with auto-detection
+- [x] Polymarket — Read-only prediction market data (search, trending, events, orderbook)
 - [ ] Event Streaming — Yellowstone gRPC for real-time pool creation
 - [ ] LP Manager — Autonomous rebalancing and fee compounding
 - [ ] Strategy Engine — Tier-aware capital allocation
