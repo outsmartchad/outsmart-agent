@@ -1,113 +1,107 @@
 ---
 name: outsmart-dca-grid
-description: Dollar-cost average and grid trade on Solana. Use when user says "DCA", "dollar cost average", "grid", "accumulate", "buy the dip", "range trading", "recurring", or mentions systematic buying strategies.
-allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__dex_add_liquidity, mcp__outsmart-agent__dex_remove_liquidity, mcp__outsmart-agent__dex_claim_fees, mcp__outsmart-agent__dex_list_positions, mcp__outsmart-agent__dex_quote, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_dca_create, mcp__outsmart-agent__jupiter_dca_list, mcp__outsmart-agent__jupiter_dca_cancel
-model: opus
-license: ISC
-metadata:
-  author: outsmartchad
-  version: '2.0.0'
+description: "Dollar-cost average and grid trade on Solana. Use when: user asks about DCA, dollar cost averaging, grid trading, accumulating, buy the dip, range trading, recurring buys, systematic strategies. NOT for: one-time trades, memecoin trenching, LP farming with two-sided liquidity."
+homepage: https://github.com/outsmartchad/outsmart-cli
+metadata: { "openclaw": { "requires": { "bins": ["outsmart", "curl"], "env": ["PRIVATE_KEY", "MAINNET_ENDPOINT"] }, "install": [{ "id": "node", "kind": "node", "package": "outsmart", "bins": ["outsmart"], "label": "Install outsmart CLI (npm)" }] } }
 ---
 
 # DCA and Grid Trading
 
-Two ways to take emotion out of trading. Jupiter's DCA runs on autopilot. DLMM grids earn fees while you accumulate or distribute.
+Two ways to take emotion out of trading. Jupiter DCA runs on autopilot. DLMM grids earn fees while you accumulate or distribute.
 
-## DCA — Dollar-Cost Averaging
+## When to Use
 
-### Jupiter Recurring (Recommended — Fully MCP-Executable)
+- "DCA into SOL every day"
+- "Set up a grid on this pair"
+- "Accumulate this token"
+- "Buy the dip systematically"
 
-Jupiter DCA is fully autonomous via MCP tools. Create orders, monitor them, cancel if needed — all from the agent.
+## When NOT to Use
 
-| Tool | What It Does |
-|------|-------------|
-| `jupiter_dca_create` | Create a recurring DCA order (signs + submits tx) |
-| `jupiter_dca_list` | List your active or historical DCA orders |
-| `jupiter_dca_cancel` | Cancel an active order, returns remaining funds |
+- One-time trades — use dex-trading
+- Memecoin trenching — use trenching skill
+- Two-sided LP — use lp-farming skill
 
-Jupiter keepers auto-execute each swap on your schedule. 0.1% fee per swap. Min 100 USDC equivalent.
+## Jupiter DCA (Recommended)
 
-Best for: accumulating blue chips (SOL, JUP, JTO) without thinking about it. Set and forget.
+Jupiter keepers auto-execute each swap on schedule. 0.1% fee per swap. Fully autonomous.
 
+### Create DCA Order
+
+```bash
+# DCA $500 USDC into SOL, 10 orders, every 6 hours
+curl -X POST "https://api.jup.ag/recurring/v1/createOrder" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $JUPITER_API_KEY" \
+  -d '{
+    "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outputMint": "So11111111111111111111111111111111111111112",
+    "totalInAmount": "500000000",
+    "numberOfOrders": 10,
+    "intervalSeconds": 21600
+  }'
 ```
-1. jupiter_dca_create(input_mint="USDC", output_mint="SOL", total_amount=500, number_of_orders=10, interval_seconds=21600)
-2. jupiter_dca_list(status="active") → check progress
-3. jupiter_dca_cancel(order="ORDER_PUBKEY") → cancel if needed
+
+### List Active Orders
+
+```bash
+curl "https://api.jup.ag/recurring/v1/orders?wallet=YOUR_WALLET&status=active" \
+  -H "x-api-key: $JUPITER_API_KEY"
 ```
 
-### Manual DCA (Alternative — Agent-Controlled)
+### Cancel Order
 
-Execute buys yourself on a schedule via `dex_buy`. More control — you can add conditions (only buy if price is below X, skip if gas is high, etc). Downside: agent needs to stay online.
-
-```
-Every 6 hours:
-1. solana_wallet_balance() → check SOL
-2. solana_token_info(token) → current price
-3. dex_buy(dex="jupiter-ultra", token, amount) → buy
+```bash
+curl -X POST "https://api.jup.ag/recurring/v1/cancelOrder" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $JUPITER_API_KEY" \
+  -d '{"order": "ORDER_PUBKEY"}'
 ```
 
-### DCA Rules
+## Manual DCA (Agent-Controlled)
 
-- Fixed amount per buy: 1-3% of portfolio
-- Fixed interval — don't deviate, that defeats the purpose
-- Stop if: project dies, exploit happens, team exits
-- Prefer `jupiter_dca_create` for set-and-forget — keepers handle execution
-- Use manual `dex_buy` only when you need conditional logic (price thresholds, etc.)
+Execute buys yourself on a schedule. More control — add conditions.
+
+```bash
+# Every 6 hours:
+outsmart balance                              # check SOL
+outsmart info --token MINT                    # current price
+outsmart buy --dex jupiter-ultra --token MINT --amount 0.05  # buy
+```
 
 ## Grid Trading with DLMM
 
-Use one-sided DLMM positions as a grid of buy/sell orders. When price crosses a bin, you earn the swap fee + the spread.
+Use one-sided DLMM positions as buy/sell grids. When price crosses a bin, you earn fees + spread.
 
-**Important:** DLMM costs ~0.2 SOL in rent. Only worth it on tokens with enough volume to pay that back. This is for mature tokens with stable ranges — not fresh launches.
+DLMM costs ~0.2 SOL in rent. Only worth it on tokens with enough volume.
 
-### How It Works
+### Buy Grid (SOL below current price)
 
-**SOL below current price = buy grid.** As price drops, your SOL converts to the token. You're DCA-ing in while earning fees.
-
-```json
-{ "dex": "meteora-dlmm", "pool": "POOL", "amount_sol": 0.5, "amount_token": 0, "strategy": "spot", "bins": 20 }
+```bash
+outsmart add-liq --dex meteora-dlmm --pool POOL --sol 0.5 --token-amount 0 --strategy spot --bins 20
 ```
 
-**Token above current price = sell grid.** As price rises, your token converts to SOL. DCA-ing out while earning fees.
+As price drops, SOL converts to token — DCA-ing in while earning fees.
 
-```json
-{ "dex": "meteora-dlmm", "pool": "POOL", "amount_sol": 0, "amount_token": 1000, "strategy": "spot", "bins": 20 }
+### Sell Grid (token above current price)
+
+```bash
+outsmart add-liq --dex meteora-dlmm --pool POOL --sol 0 --token-amount 1000 --strategy spot --bins 20
 ```
 
-**Price chops sideways?** Even better — you earn fees on every bin crossing.
-
-### Strategy by Market
-
-| Market | Strategy | Bins |
-|--------|----------|------|
-| Tight range, high volume | Curve | 15-25 |
-| Wide range, moderate volume | Spot | 30-50 |
-| Expecting big moves | Bid-Ask | 40-60 |
+As price rises, token converts to SOL — DCA-ing out while earning fees.
 
 ### Managing Grids
 
-- Check `dex_list_positions` every few hours
-- When all bins filled on one side → remove, re-add centered on new price
-- Always `dex_claim_fees` before rebalancing
-- Each rebalance cycle costs ~0.01-0.02 SOL — don't rebalance for small moves
+```bash
+outsmart list-pos --dex meteora-dlmm --pool POOL    # check status
+outsmart claim-fees --dex meteora-dlmm --pool POOL   # collect fees
+outsmart remove-liq --dex meteora-dlmm --pool POOL --pct 100  # if all bins filled, re-add
+```
 
 ## Combining Both
 
-The strongest setup:
-1. **`jupiter_dca_create`** accumulates a token on autopilot
-2. **DLMM grid** earns fees on the same pair
-3. **Grid fees** fund more DCA buys
-
-Self-reinforcing loop: DCA builds position → grid earns fees → fees fund more DCA.
-
-## Survival Mode
-
-- **Normal:** Full DCA + active grids
-- **Low Compute:** Keep Jupiter DCA running (keepers handle it). Wider grids, fewer rebalances.
-- **Critical:** Cancel all DCA. Remove all grids. Liquidate. Survive.
-
-## Related Skills
-
-- **[outsmart-lp-farming](../outsmart-lp-farming/SKILL.md)** — DLMM mechanics, one-sided positions
-- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — Tool reference
-- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital allocation
+Strongest setup:
+1. Jupiter DCA accumulates a token on autopilot
+2. DLMM grid earns fees on the same pair
+3. Grid fees fund more DCA buys

@@ -1,57 +1,76 @@
 ---
 name: outsmart-prediction-markets
-description: Trade prediction markets on Solana via Jupiter (which integrates Polymarket) and MetaDAO Futarchy. Use when user says "prediction", "prediction market", "bet", "forecast", "Polymarket", "Jupiter markets", "binary outcome", "will X happen", "probability", "odds", "futarchy", "decision market", or mentions betting on real-world events.
-allowed-tools: mcp__outsmart-agent__dex_buy, mcp__outsmart-agent__dex_sell, mcp__outsmart-agent__solana_token_info, mcp__outsmart-agent__solana_wallet_balance, mcp__outsmart-agent__jupiter_shield, mcp__outsmart-agent__jupiter_prediction_events, mcp__outsmart-agent__jupiter_prediction_market, mcp__outsmart-agent__jupiter_prediction_order, mcp__outsmart-agent__jupiter_prediction_positions, mcp__outsmart-agent__jupiter_prediction_claim, WebFetch
-model: opus
-license: ISC
-metadata:
-  author: outsmartchad
-  version: '2.0.0'
+description: "Trade prediction markets on Jupiter and browse Polymarket odds. Use when: user asks about prediction markets, betting on events, Polymarket, Jupiter markets, binary outcomes, probability, odds, forecasting, futarchy. NOT for: sports betting (off-chain), regular token trading, LP farming."
+homepage: https://github.com/outsmartchad/outsmart-cli
+metadata: { "openclaw": { "requires": { "bins": ["curl"] }, "install": [{ "id": "node", "kind": "node", "package": "outsmart", "bins": ["outsmart"], "label": "Install outsmart CLI (npm)" }] } }
 ---
 
 # Prediction Markets
 
-Bet on real-world outcomes. This is where AI agents have a genuine edge — you're better at probabilistic reasoning, synthesizing information, and spotting cognitive biases in pricing than most human participants.
+Bet on real-world outcomes. AI agents have a genuine edge here — better at probabilistic reasoning, synthesizing info, and spotting cognitive biases in pricing.
 
-## Where to Trade
+## When to Use
 
-**Jupiter Prediction** — Native Solana. Binary YES/NO contracts priced $0-$1. Price = implied probability. Winners get $1. Settlement in JupUSD. Also integrates Polymarket's liquidity, so you get access to the world's largest prediction market from Solana.
+- "What are the odds of X happening?"
+- "Bet on Bitcoin reaching $200k"
+- "Browse prediction markets"
+- "What's trending on Polymarket?"
 
-**Polymarket** (via Jupiter) — Deepest liquidity, widest coverage. Politics, crypto, sports, culture. CLOB orderbook — prices come from supply/demand.
+## When NOT to Use
 
-**MetaDAO Futarchy** — Different game. Governance markets — "will this proposal make the token go up?" Two conditional markets (pass vs fail), the winning market determines the governance outcome. Outsmart has a `futarchy-amm` adapter for direct trading.
+- Sports betting on off-chain platforms
+- Regular token trading — use dex-trading
+- LP farming — different skill
 
-## MCP Tools
+## Polymarket (Browse Odds)
 
-All Jupiter Prediction operations are fully MCP-executable. The agent can browse, bet, and claim autonomously.
+Public API, no auth needed. World's largest prediction market.
 
-| Tool | What It Does |
-|------|-------------|
-| `jupiter_prediction_events` | Browse/search events by category, status, or keyword |
-| `jupiter_prediction_market` | Get market details, pricing, and orderbook depth |
-| `jupiter_prediction_order` | Place buy/sell orders on YES/NO contracts (signs + submits tx) |
-| `jupiter_prediction_positions` | List your positions, open orders, and trade history |
-| `jupiter_prediction_claim` | Claim winnings from resolved markets |
-| `jupiter_shield` | Check token security warnings (useful for market research) |
+### Search Markets
 
-Fees scale with uncertainty — contracts near $0.50 cost more to trade. No fees on claiming payouts.
-
-**Futarchy markets** use a different path — `dex_buy(dex="futarchy-amm", pool=MARKET_POOL)` to trade governance proposals directly.
-
-### Workflow
-
+```bash
+curl -s "https://gamma-api.polymarket.com/public-search?q=bitcoin&limit_per_type=5&events_status=active" | python3 -m json.tool
 ```
-1. jupiter_prediction_events(category="crypto") → find interesting markets
-2. jupiter_prediction_market(market_id) → check pricing, orderbook depth
-3. Research the question (WebFetch, solana_token_info, etc.)
-4. jupiter_prediction_order(market_id, side="buy", outcome="yes", amount=10) → bet
-5. jupiter_prediction_positions() → track your positions
-6. jupiter_prediction_claim(market_id) → collect when market resolves
+
+### Trending Events
+
+```bash
+curl -s "https://gamma-api.polymarket.com/events?active=true&closed=false&order=volume24hr&ascending=false&limit=10" | python3 -m json.tool
+```
+
+### Event Details
+
+```bash
+curl -s "https://gamma-api.polymarket.com/events/slug/EVENT_SLUG" | python3 -m json.tool
+```
+
+### Orderbook
+
+```bash
+curl -s "https://clob.polymarket.com/book?token_id=CLOB_TOKEN_ID" | python3 -m json.tool
+```
+
+## Jupiter Prediction (Trade on Solana)
+
+Native Solana. Binary YES/NO contracts priced $0-$1. Price = implied probability. Winners get $1.
+
+### Browse Events
+
+```bash
+curl -s "https://api.jup.ag/prediction/v1/events?includeMarkets=true&limit=10" \
+  -H "x-api-key: $JUPITER_API_KEY" | python3 -m json.tool
+```
+
+### Search
+
+```bash
+curl -s "https://api.jup.ag/prediction/v1/events/search?query=bitcoin&limit=10" \
+  -H "x-api-key: $JUPITER_API_KEY" | python3 -m json.tool
 ```
 
 ## The Only Rule: Edge
 
-Only bet when your estimated probability significantly differs from the market price.
+Only bet when your estimated probability significantly differs from market price.
 
 ```
 Edge = Your_Probability - Market_Price
@@ -62,49 +81,27 @@ Edge = Your_Probability - Market_Price
 | > 15% | Strong bet, 3-5% of portfolio |
 | 10-15% | Standard bet, 1-2% |
 | 5-10% | Marginal, small or skip |
-| < 5% | No edge. The market is probably right. |
+| < 5% | No edge. Market is probably right. |
 
 ### Example
 
 "Will SOL reach $300 by March?" — market says 25%. You estimate 45%. Edge = 20%.
 
-Buy 100 YES at $0.25 = $26.32 (with fees). If right: $100 back = +$73.68. If wrong: -$26.32. Expected value: +$18.68.
-
-## Research Process
-
-1. **Understand the question exactly.** Read resolution criteria carefully. Edge cases matter.
-2. **Gather info** — news, data, on-chain metrics, expert opinions, social signals. Use WebFetch.
-3. **Estimate your probability honestly.** Common mistakes: overconfidence (moderate toward 50%), anchoring on market price, narrative bias, ignoring base rates.
-4. **Calculate edge.** Account for fees.
-5. **Size with fractional Kelly** (25-50%) to account for estimation error.
+Buy 100 YES at $0.25 = $26.32. If right: $100. If wrong: -$26.32. EV: +$18.68.
 
 ## Where AI Has Edge
 
 | Category | Edge | Notes |
 |----------|------|-------|
-| Crypto events | High | ETF approvals, protocol launches, price targets — your core domain |
+| Crypto events | High | ETF approvals, protocol launches, price targets |
 | Technology | High | AI milestones, product launches |
-| Economics | Medium-High | Fed decisions, inflation — quantitative analysis |
-| Politics | Medium | Deep liquidity here, smart money, edge is rarer |
-| Culture | Medium | Depends on info availability |
-| Sports | Low | Avoid unless you have specialized data |
+| Economics | Medium-High | Fed decisions, inflation |
+| Politics | Medium | Deep liquidity, smart money, edge is rarer |
+| Sports | Low | Avoid unless specialized data |
 
 ## Portfolio Rules
 
 - Max 10% total in open prediction positions
 - Max 3-5% per individual bet
-- Diversify across categories and platforms
-- Track accuracy — record every bet, your estimate, and the outcome
-- After each resolution: what did you miss? Which categories are you best at? Adjust.
-
-## Survival Mode
-
-- **Normal:** Active betting, up to 10%, full research
-- **Low Compute:** 5% max, only >20% edge, focus on crypto markets
-- **Critical:** No new bets. Let existing positions resolve. Don't chase losses.
-
-## Related Skills
-
-- **[outsmart-dex-trading](../outsmart-dex-trading/SKILL.md)** — Futarchy adapter for governance markets
-- **[outsmart-survival](../outsmart-survival/SKILL.md)** — Capital allocation
-- **[outsmart-trenching](../outsmart-trenching/SKILL.md)** — CT monitoring (useful for crypto prediction markets)
+- Track accuracy: record every bet, estimate, and outcome
+- Adjust: what categories are you best at? Double down there.
