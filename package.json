@@ -1,6 +1,6 @@
 {
   "name": "outsmart-agent",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "description": "MCP server + AI skills for Solana trading — wraps the outsmart CLI library for AI agent use.",
   "engines": {
     "node": ">=20.0.0"
@@ -20,11 +20,11 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run build:ts && npm run build:chmod",
-    "build:ts": "NODE_OPTIONS='--max-old-space-size=8192' tsc -p tsconfig.build.json",
+    "build:ts": "NODE_OPTIONS='--max-old-space-size=16384' tsc -p tsconfig.build.json",
     "build:chmod": "chmod +x dist/mcp/server.js || true",
     "clean": "rm -rf dist/",
     "dev": "ts-node src/mcp/server.ts",
-    "typecheck": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=16384' tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -48,7 +48,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@solana/spl-token": "^0.4.0",
     "@solana/web3.js": "^1.95.0",
-    "outsmart": "^2.0.0-alpha.10",
+    "outsmart": "^2.0.0-alpha.11",
     "zod": "^3.25.0"
   },
   "devDependencies": {

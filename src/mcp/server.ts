@@ -2,7 +2,7 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 32 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator.
+ * Exposes 38 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
  * DEX Tools (11):
@@ -22,10 +22,12 @@
  *   jupiter_prediction_order, jupiter_prediction_positions, jupiter_prediction_claim,
  *   jupiter_dca_create, jupiter_dca_list, jupiter_dca_cancel
  *
- * Percolator Perp Tools (9):
- *   percolator_create_market, percolator_trade, percolator_deposit,
- *   percolator_withdraw, percolator_market_state, percolator_list_markets,
- *   percolator_push_price, percolator_crank, percolator_insurance_lp
+ * Percolator Perp Tools (15):
+ *   percolator_create_market, percolator_trade, percolator_long, percolator_short,
+ *   percolator_close, percolator_deposit, percolator_withdraw,
+ *   percolator_market_state, percolator_list_markets,
+ *   percolator_push_price, percolator_crank, percolator_insurance_lp,
+ *   percolator_keeper_start, percolator_keeper_stop, percolator_keeper_status
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -45,8 +47,12 @@ import {
   getInfoFromDexscreener,
   PumpFunAdapter,
   PercolatorAdapter,
+  WsKeeper,
+  loadKeeperConfig,
   type IDexAdapter,
   type DexCapabilities,
+  type KeeperPoolConfig,
+  type KeeperDexType,
 } from "outsmart";
 
 // ---------------------------------------------------------------------------
@@ -1002,6 +1008,99 @@ server.tool(
 );
 
 // ---------------------------------------------------------------------------
+// Tool: percolator_long
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_long",
+  "Open a long position on a Percolator perp market. Auto-detects user account index and cranks before trading.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    size: z.string().describe("Position size in native units (positive number)"),
+    lp_idx: z.number().int().min(0).optional().describe("LP account index (default: 0)"),
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const size = BigInt(args.size);
+      if (size <= 0n) return err("size must be positive");
+      const net = args.network as any;
+      const pos = await percolator.getMyPosition(args.slab, net);
+      if (!pos) return err("No user account found. Call percolator_init_user first.");
+      await percolator.crank(args.slab, net);
+      const sig = await percolator.trade({
+        slabAddress: args.slab, lpIdx: args.lp_idx ?? 0, userIdx: pos.idx, size, network: net,
+      });
+      return ok({ signature: sig, side: "long", size: size.toString(), userIdx: pos.idx });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_short
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_short",
+  "Open a short position on a Percolator perp market. Auto-detects user account index and cranks before trading.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    size: z.string().describe("Position size in native units (positive number — will be negated internally)"),
+    lp_idx: z.number().int().min(0).optional().describe("LP account index (default: 0)"),
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const size = BigInt(args.size);
+      if (size <= 0n) return err("size must be positive");
+      const net = args.network as any;
+      const pos = await percolator.getMyPosition(args.slab, net);
+      if (!pos) return err("No user account found. Call percolator_init_user first.");
+      await percolator.crank(args.slab, net);
+      const sig = await percolator.trade({
+        slabAddress: args.slab, lpIdx: args.lp_idx ?? 0, userIdx: pos.idx, size: -size, network: net,
+      });
+      return ok({ signature: sig, side: "short", size: size.toString(), userIdx: pos.idx });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_close
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_close",
+  "Close an open perpetual futures position (trade back to flat). Auto-detects position size and direction.",
+  {
+    slab: z.string().describe("Slab (market) address"),
+    lp_idx: z.number().int().min(0).optional().describe("LP account index (default: 0)"),
+    network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+  },
+  async (args) => {
+    try {
+      const net = args.network as any;
+      const pos = await percolator.getMyPosition(args.slab, net);
+      if (!pos) return err("No position found.");
+      const currentSize = BigInt(pos.account.positionSize);
+      if (currentSize === 0n) return ok({ status: "already_flat" });
+      const side = currentSize > 0n ? "long" : "short";
+      await percolator.crank(args.slab, net);
+      const sig = await percolator.trade({
+        slabAddress: args.slab, lpIdx: args.lp_idx ?? 0, userIdx: pos.idx, size: -currentSize, network: net,
+      });
+      return ok({ signature: sig, closed: side, size: (currentSize > 0n ? currentSize : -currentSize).toString() });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
 // Tool: percolator_deposit
 // ---------------------------------------------------------------------------
 
@@ -1180,6 +1279,102 @@ server.tool(
     } catch (e: any) {
       return err(e.message);
     }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_keeper_start
+// ---------------------------------------------------------------------------
+
+// Singleton keeper instance — only one can run at a time
+let activeKeeper: WsKeeper | null = null;
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "percolator_keeper_start",
+  "Start the WebSocket oracle keeper. Watches DEX pool accounts and pushes live prices to Percolator perp markets. Only one keeper can run at a time.",
+  {
+    pools: z.array(z.object({
+      pool: z.string().describe("DEX pool address"),
+      market: z.string().describe("Percolator slab/market address"),
+      dex: z.enum([
+        "raydium-cpmm", "raydium-amm-v4", "raydium-clmm", "raydium-launchlab",
+        "pumpswap", "meteora-damm-v2", "meteora-dbc", "meteora-dlmm",
+      ]).describe("DEX type"),
+      network: z.enum(["devnet", "mainnet"]).optional(),
+    })).describe("Array of pool-to-market mappings"),
+    network: z.enum(["devnet", "mainnet"]).optional(),
+  },
+  async (args) => {
+    try {
+      if (activeKeeper) {
+        return err("Keeper already running. Stop it first with percolator_keeper_stop.");
+      }
+      const pools: KeeperPoolConfig[] = args.pools.map((p: any) => ({
+        pool: p.pool,
+        market: p.market,
+        dex: p.dex as KeeperDexType,
+        network: p.network as "devnet" | "mainnet" | undefined,
+      }));
+      activeKeeper = new WsKeeper(pools, {
+        network: (args.network as "devnet" | "mainnet") ?? "devnet",
+        logLevel: "info",
+      });
+      await activeKeeper.start();
+      const stats = activeKeeper.getStats();
+      return ok({
+        status: "started",
+        activeWatchers: stats.activeWatchers,
+        pools: pools.length,
+      });
+    } catch (e: any) {
+      activeKeeper = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_keeper_stop
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_keeper_stop",
+  "Stop the running WebSocket oracle keeper.",
+  {},
+  async () => {
+    try {
+      if (!activeKeeper) {
+        return err("No keeper is running.");
+      }
+      const stats = activeKeeper.getStats();
+      await activeKeeper.stop();
+      activeKeeper = null;
+      return ok({
+        status: "stopped",
+        totalPushes: stats.pushCount,
+        totalErrors: stats.errorCount,
+      });
+    } catch (e: any) {
+      activeKeeper = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: percolator_keeper_status
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "percolator_keeper_status",
+  "Get the current status of the WebSocket oracle keeper.",
+  {},
+  async () => {
+    if (!activeKeeper) {
+      return ok({ running: false });
+    }
+    return ok(activeKeeper.getStats());
   },
 );
 
