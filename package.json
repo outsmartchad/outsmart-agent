@@ -48,7 +48,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@solana/spl-token": "^0.4.0",
     "@solana/web3.js": "^1.95.0",
-    "outsmart": "^2.0.0-alpha.11",
+    "outsmart": "^2.0.0-alpha.12",
     "zod": "^3.25.0"
   },
   "devDependencies": {

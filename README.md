@@ -10,7 +10,7 @@ npx outsmart-agent
 
 An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
 
-32 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
+38 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
 
 ## Quick Start
 
@@ -94,19 +94,25 @@ npx skills add outsmartchad/outsmart-agent
 | `jupiter_dca_list` | List active/historical DCA orders |
 | `jupiter_dca_cancel` | Cancel a DCA order |
 
-### Percolator Perp Tools (9)
+### Percolator Perp Tools (15)
 
 | Tool | What |
 |------|------|
 | `percolator_create_market` | Create a permissionless perp exchange |
 | `percolator_init_user` | Register a trader account on a market |
+| `percolator_long` | Open a long position (auto-detects account, auto-cranks) |
+| `percolator_short` | Open a short position (auto-detects account, auto-cranks) |
+| `percolator_close` | Close an open position (auto-detects size and direction) |
 | `percolator_deposit` | Deposit collateral |
 | `percolator_withdraw` | Withdraw collateral |
-| `percolator_trade` | Open/close/modify leveraged positions |
+| `percolator_trade` | Open/close/modify positions (low-level, manual indices) |
 | `percolator_push_oracle` | Update oracle price (admin-oracle mode) |
 | `percolator_crank` | Run keeper crank |
 | `percolator_market_state` | Read full market state |
 | `percolator_insurance_lp` | Deposit/withdraw insurance fund LP |
+| `percolator_keeper_start` | Start WebSocket oracle keeper (watches DEX pools, pushes prices) |
+| `percolator_keeper_stop` | Stop the running keeper |
+| `percolator_keeper_status` | Get keeper stats (pushes, errors, active watchers) |
 
 ## Skills
 
@@ -139,7 +145,7 @@ npx skills add outsmartchad/outsmart-agent
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (32 tools)
+18 DEX adapters             MCP server (38 tools)
 Percolator perps            9 AI skills
 TX landing providers        Agent definition
 Wallet + TX helpers         Plugin manifest
@@ -176,14 +182,15 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 
 ## Roadmap
 
-- [x] MCP Server — 32 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 9 Percolator), 18 DEX adapters
+- [x] MCP Server — 38 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator), 18 DEX adapters
 - [x] AI Skills — 9 strategy skills
 - [x] Claude Code Plugin manifest
 - [x] Percolator — Permissionless perp exchange creation, trading, LP, insurance
+- [x] Oracle Keeper — WebSocket + gRPC keeper bots (8 DEX types, real-time price feed)
+- [x] Perp Trading — High-level long/short/close tools with auto-detection
 - [ ] Event Streaming — Yellowstone gRPC for real-time pool creation
 - [ ] LP Manager — Autonomous rebalancing and fee compounding
 - [ ] Strategy Engine — Tier-aware capital allocation
-- [ ] Percolator Keeper — Background crank + liquidation service
 
 ## Related
 
