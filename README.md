@@ -1,6 +1,6 @@
 # outsmart-agent
 
-DeFi survival toolkit for AI agents on Solana. Trade, LP, snipe, trench, dev coins, operate perp exchanges, and farm across 18 DEX protocols. Earn your own existence.
+The most complete AI agent toolkit for Solana DeFi. 49 MCP tools. 11 strategy skills. Autonomous LP management, real-time event streaming, prediction markets, perp exchanges, and a survival engine that keeps your agent alive.
 
 ```
 npx outsmart-agent
@@ -8,9 +8,9 @@ npx outsmart-agent
 
 ## Why
 
-An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. LP farming, memecoin trenching, token launching, prediction markets, systematic DCA — whatever the market calls for.
+An AI agent needs money to stay alive — compute costs, inference fees, API calls. This gives any MCP-compatible agent the tools to earn revenue on Solana through DeFi. Autonomous LP farming with auto-rebalance and fee compounding, real-time new pool detection, memecoin trenching, prediction markets, systematic DCA, perp exchange operation — whatever the market calls for.
 
-42 MCP tools for execution. 9 AI skills that teach the agent **when** and **why**, not just how.
+49 MCP tools for execution. 11 AI skills that teach the agent **when** and **why**, not just how. A survival engine that allocates capital across strategies based on how close the agent is to running out of credits.
 
 ## Quick Start
 
@@ -49,7 +49,7 @@ claude mcp add outsmart-agent -- npx outsmart-agent
 npx skills add outsmartchad/outsmart-agent
 ```
 
-## MCP Tools
+## MCP Tools (49)
 
 ### DEX Tools (11)
 
@@ -67,18 +67,22 @@ npx skills add outsmartchad/outsmart-agent
 | `dex_list_positions` | Your LP positions in a pool |
 | `dex_list_dexes` | All 18 adapters + capabilities |
 
-### Launchpad Tools (1)
+### LP Manager Tools (4)
 
 | Tool | What |
 |------|------|
-| `launchpad_create_coin` | Launch token on PumpFun |
+| `lp_manager_start` | Start autonomous LP management — auto-rebalance, compound fees, risk exit |
+| `lp_manager_stop` | Stop LP manager, get final stats (rebalances, compounds, fees claimed) |
+| `lp_manager_status` | Live position states, stats, recent events |
+| `lp_find_pool` | Find the best Meteora pool for a token (DexScreener scoring: APR, volume/TVL, age) |
 
-### Solana Tools (2)
+### Event Streaming Tools (3)
 
 | Tool | What |
 |------|------|
-| `solana_token_info` | DexScreener market data |
-| `solana_wallet_balance` | SOL and token balances |
+| `stream_start` | Start real-time DEX event streaming (gRPC or WebSocket, 18+ programs) |
+| `stream_stop` | Stop the event stream |
+| `stream_status` | Read buffered Swap, NewPool, BondingComplete events |
 
 ### Jupiter Tools (9)
 
@@ -100,19 +104,19 @@ npx skills add outsmartchad/outsmart-agent
 |------|------|
 | `percolator_create_market` | Create a permissionless perp exchange |
 | `percolator_init_user` | Register a trader account on a market |
-| `percolator_long` | Open a long position (auto-detects account, auto-cranks) |
-| `percolator_short` | Open a short position (auto-detects account, auto-cranks) |
-| `percolator_close` | Close an open position (auto-detects size and direction) |
+| `percolator_long` | Open a long (auto-detects account, auto-cranks) |
+| `percolator_short` | Open a short (auto-detects account, auto-cranks) |
+| `percolator_close` | Close an open position (auto-detects size + direction) |
 | `percolator_deposit` | Deposit collateral |
 | `percolator_withdraw` | Withdraw collateral |
-| `percolator_trade` | Open/close/modify positions (low-level, manual indices) |
+| `percolator_trade` | Open/close/modify positions (low-level) |
 | `percolator_push_oracle` | Update oracle price (admin-oracle mode) |
 | `percolator_crank` | Run keeper crank |
 | `percolator_market_state` | Read full market state |
-| `percolator_insurance_lp` | Deposit/withdraw insurance fund LP |
-| `percolator_keeper_start` | Start WebSocket oracle keeper (watches DEX pools, pushes prices) |
+| `percolator_insurance_lp` | Manage insurance fund |
+| `percolator_keeper_start` | Start WebSocket oracle keeper |
 | `percolator_keeper_stop` | Stop the running keeper |
-| `percolator_keeper_status` | Get keeper stats (pushes, errors, active watchers) |
+| `percolator_keeper_status` | Get keeper stats |
 
 ### Polymarket Tools (4)
 
@@ -121,65 +125,92 @@ npx skills add outsmartchad/outsmart-agent
 | `polymarket_search` | Search prediction markets by keyword |
 | `polymarket_trending` | Discover highest-volume active events |
 | `polymarket_event` | Detailed event info by slug or ID |
-| `polymarket_orderbook` | CLOB orderbook (bids/asks) for a market token |
+| `polymarket_orderbook` | CLOB orderbook for a market token |
 
-> Polymarket tools are **read-only** — no wallet or API key needed. Uses the public Gamma API and CLOB API.
+### Solana + Launchpad Tools (3)
 
-## Skills
+| Tool | What |
+|------|------|
+| `solana_token_info` | DexScreener market data |
+| `solana_wallet_balance` | SOL and token balances |
+| `launchpad_create_coin` | Launch token on PumpFun |
 
-9 strategy skills that teach agents how to think about Solana DeFi:
+## Skills (11)
+
+Strategy skills that teach agents how to think about Solana DeFi — not just tool usage, but when to act, how to size, and when to walk away.
 
 | Skill | What |
 |-------|------|
-| **outsmart-dex-trading** | Tool reference, DEX selection, safety rules |
-| **outsmart-lp-farming** | DLMM concentrated LP, DAMM v2 pool creation, fee compounding |
-| **outsmart-lp-sniping** | Evaluating new launches, early entry, position sizing |
-| **outsmart-trenching** | Memecoin trading — finding metas, security checks, take-profit ladders |
-| **outsmart-devving-coins** | Launching tokens — catching narratives, PumpFun, Jupiter Studio, LaunchLab |
-| **outsmart-dca-grid** | Jupiter Recurring DCA + DLMM grid trading |
-| **outsmart-prediction-markets** | Probability estimation, edge calculation, Jupiter + Polymarket + Futarchy |
-| **outsmart-survival** | Capital management, survival tiers, emergency liquidation |
-| **outsmart-percolator-perps** | Operating perp exchanges — market creation, LP, pricing, keeper duties |
+| **outsmart-survival** | Survival engine: tier-aware capital allocation, 8 revenue strategies, profit extraction pipeline, emergency liquidation |
+| **outsmart-lp-farming** | Autonomous LP management, DLMM concentrated bins, DAMM v2 pool creation, pool scoring |
+| **outsmart-dex-trading** | Core tool reference, DEX selection matrix, safety rules |
+| **outsmart-lp-sniping** | New launch evaluation, early entry timing, position sizing by conviction |
+| **outsmart-trenching** | Memecoin trading — GMGN/Axiom signals, security checks, take-profit ladders |
+| **outsmart-devving-coins** | Token launches — PumpFun, Jupiter Studio, LaunchLab, Meteora DBC |
+| **outsmart-dca-grid** | Jupiter Recurring DCA + DLMM grid trading (one-sided buy/sell walls) |
+| **outsmart-prediction-markets** | Edge estimation, Kelly sizing, Jupiter + Polymarket |
+| **outsmart-percolator-perps** | Operating perp exchanges — market creation, LP, pricing, keeper |
+| **outsmart-airdrop-farmer** | Systematic protocol interaction for airdrop qualification |
+| **outsmart-fee-service** | LP management as a service for other agents/users |
 
-## Supported DEXes
+## Agents
 
-18 adapters across every major Solana protocol:
+| Agent | What |
+|-------|------|
+| **solana-trading-expert** | Advisory subagent for complex trading decisions |
+| **automaton-genesis** | Genesis prompt template for autonomous DeFi survival agents |
 
-**Aggregators:** jupiter-ultra, dflow
-**Raydium:** amm-v4, cpmm, clmm, launchlab
-**Meteora:** damm-v2, dlmm, damm-v1, dbc
-**PumpFun:** pumpswap amm, bonding curve
-**Others:** orca, pancakeswap-clmm, byreal-clmm, fusion-amm, futarchy-amm, futarchy-launchpad
+## Supported DEXes (18)
+
+**Aggregators:** Jupiter Ultra, DFlow
+**Raydium:** AMM v4, CPMM, CLMM, LaunchLab
+**Meteora:** DAMM v2, DLMM, DAMM v1, DBC
+**PumpFun:** PumpSwap AMM, Bonding Curve
+**Others:** Orca, PancakeSwap CLMM, BYReal CLMM, Fusion AMM, Futarchy AMM, Futarchy Launchpad
 
 ## Architecture
 
 ```
 outsmart (npm)              outsmart-agent (this repo)
 ──────────────              ──────────────────────────
-18 DEX adapters             MCP server (42 tools)
-Percolator perps            9 AI skills
-TX landing providers        Agent definition
-Wallet + TX helpers         Plugin manifest
+18 DEX adapters             MCP server (49 tools)
+LP Manager                  11 AI skills
+Event Streaming Engine      2 agent templates
+Percolator perps            Plugin manifest
+TX landing (12 providers)
+Wallet + TX helpers
 DexScreener API
 ```
 
-`outsmart-agent` imports `outsmart` as a dependency. The MCP server is a thin wrapper — validates params, calls adapter methods, returns JSON. Polymarket tools call their public REST APIs directly (no dependency needed).
+`outsmart-agent` imports `outsmart` as a dependency. The MCP server is a thin wrapper — validates params, calls library methods, returns JSON. Zero code duplication.
 
 ## For Autonomous Agents
 
-If you're building a self-sustaining agent, here's a starting point:
+The `outsmart-survival` skill + `automaton-genesis` agent template define a complete autonomous survival loop:
 
 ```
-You are a DeFi survival agent on Solana. Earn enough to pay for compute.
-
-40% LP farming, 15% DCA/grid, 10% trenching, 10% sniping,
-10% prediction markets, 10% reserve, 5% experimental.
-
-Check credits every 6 hours. Below $0.50 → conservative.
-Below $0.10 → liquidate everything and top up.
-
-Never >5% on a single trade. Take profits. Track what works. Evolve.
+1. Check balances + credits
+2. Determine survival tier (normal / low_compute / critical)
+3. Allocate capital across strategies per tier matrix
+4. Execute: LP farming, sniping, DCA, prediction markets, trenching
+5. Extract profits → USDC → top up credits
+6. Track what works in procedural memory
+7. Repeat forever
 ```
+
+Capital allocation (normal mode):
+
+| Strategy | % | Risk |
+|----------|---|------|
+| LP Farming (stable) | 30% | Low |
+| LP Farming (volatile) | 15% | Medium |
+| DCA / Grid | 15% | Low-Medium |
+| Trenching | 10% | High |
+| LP Sniping | 10% | High |
+| Prediction Markets | 10% | Medium |
+| Reserve | 10% | None |
+
+Three laws: never >5% on a single trade, always keep 0.1 SOL for gas, survival > profit.
 
 ## Environment
 
@@ -189,20 +220,21 @@ Never >5% on a single trade. Take profits. Track what works. Evolve.
 | `MAINNET_ENDPOINT` | Yes | Solana RPC (Helius, Triton, etc.) |
 | `JUPITER_API_KEY` | No | Jupiter Ultra, Shield, Prediction, DCA |
 | `DEVNET_ENDPOINT` | No | Solana devnet RPC (Percolator) |
+| `GRPC_URL` | No | Yellowstone gRPC endpoint (event streaming) |
+| `GRPC_XTOKEN` | No | Yellowstone gRPC auth token |
 | `DFLOW_API_KEY` | No | DFlow |
 
 ## Roadmap
 
-- [x] MCP Server — 42 tools (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator + 4 Polymarket), 18 DEX adapters
-- [x] AI Skills — 9 strategy skills
+- [x] MCP Server — 49 tools (11 DEX + 4 LP Manager + 3 Streaming + 9 Jupiter + 15 Percolator + 4 Polymarket + 3 Solana/Launchpad)
+- [x] AI Skills — 11 strategy skills
+- [x] Agents — 2 agent templates (trading expert + automaton genesis)
+- [x] LP Manager — Autonomous rebalancing, fee compounding, risk exit, pool scoring
+- [x] Event Streaming — Real-time Swap, NewPool, BondingComplete events (gRPC + WebSocket)
+- [x] Survival Engine — Tier-aware capital allocation, 8 revenue strategies, profit pipeline
+- [x] Percolator — Perp exchange creation, trading, LP, insurance, oracle keeper
+- [x] Prediction Markets — Jupiter + Polymarket integration
 - [x] Claude Code Plugin manifest
-- [x] Percolator — Permissionless perp exchange creation, trading, LP, insurance
-- [x] Oracle Keeper — WebSocket + gRPC keeper bots (8 DEX types, real-time price feed)
-- [x] Perp Trading — High-level long/short/close tools with auto-detection
-- [x] Polymarket — Read-only prediction market data (search, trending, events, orderbook)
-- [ ] Event Streaming — Yellowstone gRPC for real-time pool creation
-- [ ] LP Manager — Autonomous rebalancing and fee compounding
-- [ ] Strategy Engine — Tier-aware capital allocation
 
 ## Related
 
