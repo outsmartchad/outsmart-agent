@@ -2,7 +2,7 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 42 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator + Polymarket.
+ * Exposes 49 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator + Polymarket + LP Manager + Event Streaming.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
  * DEX Tools (11):
@@ -31,6 +31,12 @@
  *
  * Polymarket Tools (4):
  *   polymarket_search, polymarket_trending, polymarket_event, polymarket_orderbook
+ *
+ * LP Manager Tools (4):
+ *   lp_manager_start, lp_manager_stop, lp_manager_status, lp_find_pool
+ *
+ * Event Streaming Tools (3):
+ *   stream_start, stream_stop, stream_status
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -52,10 +58,14 @@ import {
   PercolatorAdapter,
   WsKeeper,
   loadKeeperConfig,
+  LpManager,
+  selectBestPool,
   type IDexAdapter,
   type DexCapabilities,
   type KeeperPoolConfig,
   type KeeperDexType,
+  type LpManagerConfig,
+  type LpManagerEvent,
 } from "outsmart";
 
 // ---------------------------------------------------------------------------
@@ -1572,6 +1582,292 @@ server.tool(
     } catch (e: any) {
       return err(e.message);
     }
+  },
+);
+
+// ===========================================================================
+// LP MANAGER TOOLS (4) — Autonomous LP position management
+// ===========================================================================
+
+// Singleton LP manager instance — only one can run at a time
+let activeLpManager: LpManager | null = null;
+let lpManagerEvents: LpManagerEvent[] = [];
+const LP_EVENT_BUFFER_SIZE = 100;
+
+// ---------------------------------------------------------------------------
+// Tool: lp_manager_start
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "lp_manager_start",
+  "Start the autonomous LP manager for a Meteora pool. Auto-rebalances DLMM positions when out of range, compounds fees, and exits on risk thresholds. Only one manager can run at a time.",
+  {
+    pool: z.string().describe("Pool address to manage"),
+    dex: z.enum(["meteora-dlmm", "meteora-damm-v2"]).describe("DEX protocol"),
+    position: z.string().optional().describe("Specific position address (default: all positions in pool)"),
+    rebalance_bins: z.number().int().min(1).max(70).optional().describe("Bins for new position after rebalance (DLMM, default: 50)"),
+    strategy: z.enum(["spot", "curve", "bid-ask"]).optional().describe("LP distribution strategy (DLMM, default: spot)"),
+    compound_interval_min: z.number().min(0).optional().describe("Compound fees every N minutes (0=off, default: 30)"),
+    il_threshold_pct: z.number().min(0).optional().describe("Exit if IL exceeds N% (default: 10)"),
+    stop_loss_pct: z.number().min(0).optional().describe("Exit if price drops N% from entry (0=off, default: 0)"),
+    dry_run: z.boolean().optional().describe("Log actions without executing (default: false)"),
+    use_ws: z.boolean().optional().describe("Use WebSocket streaming for price updates (default: auto)"),
+  },
+  async (args) => {
+    try {
+      if (activeLpManager) {
+        return err("LP Manager already running. Stop it first with lp_manager_stop.");
+      }
+
+      // Load the required adapter
+      if (args.dex === "meteora-dlmm") await import("outsmart/dist/dex/meteora-dlmm");
+      else await import("outsmart/dist/dex/meteora-damm-v2");
+
+      lpManagerEvents = [];
+
+      const config: LpManagerConfig = {
+        poolAddress: args.pool,
+        dex: args.dex,
+        positionAddress: args.position,
+        rebalanceBins: args.rebalance_bins,
+        rebalanceStrategy: args.strategy as any,
+        compoundIntervalMin: args.compound_interval_min,
+        ilThresholdPct: args.il_threshold_pct,
+        stopLossPct: args.stop_loss_pct,
+        dryRun: args.dry_run,
+        useWebSocket: args.use_ws,
+        useStreaming: true,
+      };
+
+      activeLpManager = new LpManager(config);
+      activeLpManager.on("event", (event: LpManagerEvent) => {
+        lpManagerEvents.push(event);
+        if (lpManagerEvents.length > LP_EVENT_BUFFER_SIZE) {
+          lpManagerEvents.shift();
+        }
+      });
+
+      await activeLpManager.start();
+      const stats = activeLpManager.getStats();
+
+      return ok({
+        status: "started",
+        dex: args.dex,
+        pool: args.pool,
+        positions: stats.positionCount,
+        dryRun: args.dry_run ?? false,
+      });
+    } catch (e: any) {
+      activeLpManager = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: lp_manager_stop
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "lp_manager_stop",
+  "Stop the running LP manager. Returns final stats (rebalances, compounds, fees claimed).",
+  {},
+  async () => {
+    try {
+      if (!activeLpManager) {
+        return err("No LP Manager is running.");
+      }
+      const stats = activeLpManager.getStats();
+      await activeLpManager.stop();
+      activeLpManager = null;
+      return ok({
+        status: "stopped",
+        ...stats,
+        recentEvents: lpManagerEvents.slice(-10),
+      });
+    } catch (e: any) {
+      activeLpManager = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: lp_manager_status
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "lp_manager_status",
+  "Get the current status of the LP manager — positions, stats, and recent events.",
+  {
+    include_events: z.boolean().optional().describe("Include recent event log (default: true)"),
+  },
+  async (args) => {
+    if (!activeLpManager) {
+      return ok({ running: false });
+    }
+    const stats = activeLpManager.getStats();
+    const positions = activeLpManager.getPositions().map((p) => ({
+      positionAddress: p.positionAddress,
+      dex: p.dex,
+      inRange: p.inRange,
+      amountX: p.amountX,
+      amountY: p.amountY,
+      feeX: p.feeX,
+      feeY: p.feeY,
+      currentPrice: p.currentPrice,
+      entryPrice: p.entryPrice,
+      rebalanceCount: p.rebalanceCount,
+      compoundCount: p.compoundCount,
+      totalFeesClaimed: p.totalFeesClaimed,
+    }));
+    const result: any = { ...stats, running: true, positions };
+    if (args.include_events !== false) {
+      result.recentEvents = lpManagerEvents.slice(-20);
+    }
+    return ok(result);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: lp_find_pool
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "lp_find_pool",
+  "Find the best Meteora LP pool for a token. Scores pools by volume/TVL ratio, fee APR, TVL, and age using DexScreener data. Returns ranked results.",
+  {
+    token: z.string().describe("Token mint address"),
+    dex: z.enum(["meteora-dlmm", "meteora-damm-v2"]).optional().describe("Filter by DEX (default: both)"),
+    limit: z.number().int().min(1).max(20).optional().describe("Max results (default: 10)"),
+  },
+  async (args) => {
+    try {
+      const pools = await selectBestPool(args.token, args.dex);
+      const limited = pools.slice(0, args.limit ?? 10);
+      return ok(limited);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ===========================================================================
+// EVENT STREAMING TOOLS (3) — Real-time DEX event streaming
+// ===========================================================================
+
+// Singleton stream instance
+let activeStream: any = null;
+let streamEvents: any[] = [];
+const STREAM_EVENT_BUFFER_SIZE = 200;
+
+// ---------------------------------------------------------------------------
+// Tool: stream_start
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "stream_start",
+  "Start real-time DEX event streaming. Captures Swap, NewPool, BondingComplete events from 18+ Solana DEX programs. Auto-selects gRPC (if configured) or WebSocket (free).",
+  {
+    preset: z.enum([
+      "all-dex-swaps", "new-pools", "pumpfun-bonding",
+      "pumpswap", "raydium", "meteora", "other-dexes",
+    ]).describe("Subscription preset"),
+    use_ws: z.boolean().optional().describe("Force WebSocket mode (free, higher latency)"),
+  },
+  async (args) => {
+    try {
+      if (activeStream) {
+        return err("Stream already running. Stop it first with stream_stop.");
+      }
+
+      streamEvents = [];
+      const useWs = args.use_ws ?? (!process.env.GRPC_URL && !process.env.GRPC_XTOKEN);
+
+      if (useWs) {
+        const { WsEventStream } = await import("outsmart");
+        activeStream = new WsEventStream({ logLevel: "silent" });
+      } else {
+        const { EventStream } = await import("outsmart");
+        activeStream = new EventStream({ logLevel: "silent" });
+      }
+
+      // Buffer events
+      for (const eventType of ["Swap", "NewPool", "BondingComplete", "LargeSwap"]) {
+        activeStream.on(eventType, (event: any) => {
+          streamEvents.push({ type: eventType, ...event, _ts: Date.now() });
+          if (streamEvents.length > STREAM_EVENT_BUFFER_SIZE) {
+            streamEvents.shift();
+          }
+        });
+      }
+
+      await activeStream.start(args.preset);
+      return ok({
+        status: "started",
+        preset: args.preset,
+        mode: useWs ? "websocket" : "grpc",
+      });
+    } catch (e: any) {
+      activeStream = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: stream_stop
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "stream_stop",
+  "Stop the running event stream.",
+  {},
+  async () => {
+    try {
+      if (!activeStream) {
+        return err("No stream is running.");
+      }
+      await activeStream.stop();
+      activeStream = null;
+      const count = streamEvents.length;
+      return ok({ status: "stopped", bufferedEvents: count });
+    } catch (e: any) {
+      activeStream = null;
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: stream_status
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "stream_status",
+  "Get recent events from the running event stream. Returns buffered Swap, NewPool, and BondingComplete events.",
+  {
+    limit: z.number().int().min(1).max(100).optional().describe("Max events to return (default: 20, most recent first)"),
+    type: z.enum(["Swap", "NewPool", "BondingComplete", "LargeSwap", "all"]).optional().describe("Filter by event type (default: all)"),
+  },
+  async (args) => {
+    if (!activeStream) {
+      return ok({ running: false, events: [] });
+    }
+    const limit = args.limit ?? 20;
+    let events = streamEvents;
+    if (args.type && args.type !== "all") {
+      events = events.filter((e) => e.type === args.type);
+    }
+    return ok({
+      running: true,
+      totalBuffered: streamEvents.length,
+      events: events.slice(-limit).reverse(),
+    });
   },
 );
 
