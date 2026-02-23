@@ -18,7 +18,7 @@ The DeFi survival toolkit for AI agents on Solana.
 ## Components
 
 ### MCP Server (`src/mcp/server.ts`)
-38 tools over stdio transport (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator):
+42 tools over stdio transport (11 DEX + 1 Launchpad + 2 Solana + 9 Jupiter + 15 Percolator + 4 Polymarket):
 - `dex_buy`, `dex_sell`, `dex_quote`, `dex_snipe`
 - `dex_find_pool`, `dex_create_pool`, `dex_add_liquidity`, `dex_remove_liquidity`
 - `dex_claim_fees`, `dex_list_positions`, `dex_list_dexes`
@@ -32,6 +32,7 @@ The DeFi survival toolkit for AI agents on Solana.
 - `percolator_close`, `percolator_push_oracle`, `percolator_crank`
 - `percolator_market_state`, `percolator_insurance_lp`
 - `percolator_keeper_start`, `percolator_keeper_stop`, `percolator_keeper_status`
+- `polymarket_search`, `polymarket_trending`, `polymarket_event`, `polymarket_orderbook`
 
 ### AI Skills (`skills/`)
 9 strategy skills with YAML frontmatter:

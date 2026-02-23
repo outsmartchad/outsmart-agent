@@ -2,7 +2,7 @@
 /**
  * outsmart-agent MCP Server
  *
- * Exposes 38 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator.
+ * Exposes 42 MCP tools wrapping the `outsmart` trading library + Jupiter APIs + Percolator + Polymarket.
  * Runs over stdio transport — start with `npx outsmart-agent`.
  *
  * DEX Tools (11):
@@ -28,6 +28,9 @@
  *   percolator_market_state, percolator_list_markets,
  *   percolator_push_price, percolator_crank, percolator_insurance_lp,
  *   percolator_keeper_start, percolator_keeper_stop, percolator_keeper_status
+ *
+ * Polymarket Tools (4):
+ *   polymarket_search, polymarket_trending, polymarket_event, polymarket_orderbook
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -1375,6 +1378,200 @@ server.tool(
       return ok({ running: false });
     }
     return ok(activeKeeper.getStats());
+  },
+);
+
+// ===========================================================================
+// Polymarket Tools (4) — Read-only prediction market data
+// ===========================================================================
+
+const GAMMA_API = "https://gamma-api.polymarket.com";
+const CLOB_API = "https://clob.polymarket.com";
+
+async function polymarketGet(url: string): Promise<any> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Polymarket API: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Tool: polymarket_search
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "polymarket_search",
+  "Search Polymarket prediction markets by keyword. Returns matching events with market odds, volume, and liquidity. No auth needed — read-only.",
+  {
+    query: z.string().describe("Search query (e.g. 'bitcoin', 'trump', 'fed rate')"),
+    limit: z.number().int().min(1).max(20).optional().describe("Max results per type (default: 6)"),
+  },
+  async (args) => {
+    try {
+      const limit = args.limit ?? 6;
+      const data = await polymarketGet(
+        `${GAMMA_API}/public-search?q=${encodeURIComponent(args.query)}&limit_per_type=${limit}&events_status=active`,
+      );
+      // Slim down the response to the useful fields
+      const events = (data.events ?? []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        slug: e.slug,
+        volume: e.volume,
+        volume24hr: e.volume24hr,
+        liquidity: e.liquidity,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        markets: (e.markets ?? []).map((m: any) => ({
+          id: m.id,
+          question: m.question,
+          outcomePrices: m.outcomePrices,
+          outcomes: m.outcomes,
+          volume: m.volumeNum,
+          liquidity: m.liquidityNum,
+          bestBid: m.bestBid,
+          bestAsk: m.bestAsk,
+          lastTradePrice: m.lastTradePrice,
+          oneDayPriceChange: m.oneDayPriceChange,
+        })),
+      }));
+      return ok({ results: events, total: data.pagination?.totalResults ?? events.length });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: polymarket_trending
+// ---------------------------------------------------------------------------
+
+// @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
+server.tool(
+  "polymarket_trending",
+  "Get trending/highest-volume active prediction markets on Polymarket. Great for discovering what the world is betting on right now.",
+  {
+    order: z.enum(["volume24hr", "volume", "liquidity", "competitive"]).optional()
+      .describe("Sort order (default: volume24hr)"),
+    limit: z.number().int().min(1).max(50).optional().describe("Max events to return (default: 10)"),
+    tag_slug: z.string().optional().describe("Filter by tag slug (e.g. 'politics', 'crypto', 'sports')"),
+  },
+  async (args) => {
+    try {
+      const order = args.order ?? "volume24hr";
+      const limit = args.limit ?? 10;
+      let url = `${GAMMA_API}/events?active=true&closed=false&order=${order}&ascending=false&limit=${limit}`;
+      if (args.tag_slug) url += `&tag_slug=${args.tag_slug}`;
+      const data = await polymarketGet(url);
+      const events = (Array.isArray(data) ? data : []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        slug: e.slug,
+        description: e.description?.slice(0, 200),
+        volume: e.volume,
+        volume24hr: e.volume24hr,
+        liquidity: e.liquidity,
+        openInterest: e.openInterest,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        category: e.category,
+        markets: (e.markets ?? []).map((m: any) => ({
+          id: m.id,
+          question: m.question,
+          outcomePrices: m.outcomePrices,
+          outcomes: m.outcomes,
+          volume: m.volumeNum,
+          liquidity: m.liquidityNum,
+          bestBid: m.bestBid,
+          bestAsk: m.bestAsk,
+          lastTradePrice: m.lastTradePrice,
+        })),
+      }));
+      return ok(events);
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: polymarket_event
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "polymarket_event",
+  "Get detailed info for a specific Polymarket event by slug or ID. Returns all markets within the event with current odds, volume, and resolution details.",
+  {
+    slug: z.string().optional().describe("Event slug from URL (e.g. 'fed-decision-in-october')"),
+    id: z.string().optional().describe("Event numeric ID"),
+  },
+  async (args) => {
+    try {
+      if (!args.slug && !args.id) return err("Provide either slug or id");
+      let url: string;
+      if (args.slug) {
+        url = `${GAMMA_API}/events/slug/${args.slug}`;
+      } else {
+        url = `${GAMMA_API}/events/${args.id}`;
+      }
+      const e = await polymarketGet(url);
+      return ok({
+        id: e.id,
+        title: e.title,
+        slug: e.slug,
+        description: e.description,
+        resolutionSource: e.resolutionSource,
+        volume: e.volume,
+        volume24hr: e.volume24hr,
+        liquidity: e.liquidity,
+        openInterest: e.openInterest,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        active: e.active,
+        closed: e.closed,
+        category: e.category,
+        markets: (e.markets ?? []).map((m: any) => ({
+          id: m.id,
+          question: m.question,
+          description: m.description,
+          outcomes: m.outcomes,
+          outcomePrices: m.outcomePrices,
+          volume: m.volumeNum,
+          liquidity: m.liquidityNum,
+          bestBid: m.bestBid,
+          bestAsk: m.bestAsk,
+          lastTradePrice: m.lastTradePrice,
+          oneDayPriceChange: m.oneDayPriceChange,
+          oneWeekPriceChange: m.oneWeekPriceChange,
+          clobTokenIds: m.clobTokenIds,
+          resolutionSource: m.resolutionSource,
+          endDate: m.endDate,
+          active: m.active,
+          closed: m.closed,
+        })),
+      });
+    } catch (e: any) {
+      return err(e.message);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Tool: polymarket_orderbook
+// ---------------------------------------------------------------------------
+
+server.tool(
+  "polymarket_orderbook",
+  "Get the orderbook for a specific Polymarket market token. Shows bids, asks, spread, and last trade price. Use clobTokenIds from polymarket_event to get the token ID.",
+  {
+    token_id: z.string().describe("CLOB token ID (from market's clobTokenIds field)"),
+  },
+  async (args) => {
+    try {
+      const data = await polymarketGet(`${CLOB_API}/book?token_id=${args.token_id}`);
+      return ok(data);
+    } catch (e: any) {
+      return err(e.message);
+    }
   },
 );
 
