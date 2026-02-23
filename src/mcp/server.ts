@@ -945,13 +945,14 @@ const percolator = new PercolatorAdapter();
 // @ts-expect-error — TS2589: deep type instantiation from MCP SDK generics + zod
 server.tool(
   "percolator_create_market",
-  "Create a new Percolator perpetual futures market. Agent becomes admin/oracle authority. Returns slab address for all subsequent operations.",
+  "Create a new Percolator perpetual futures market. Two oracle modes: admin-oracle (default, you push prices) or Pyth-pinned (pass pyth_feed_id, prices come from Pyth on-chain automatically). Returns slab address for all subsequent operations.",
   {
     collateral_mint: z.string().describe("Collateral token mint address (e.g. BONK, wSOL)"),
     initial_price_e6: z.string().describe("Initial oracle price in e6 format (1 USD = 1000000). Example: '150000' for $0.15"),
     lp_collateral: z.string().describe("Initial LP collateral in native token units (e.g. '1000000000' for 1B BONK lamports)"),
     tier: z.enum(["small", "medium", "large"]).optional().describe("Slab tier: small (256 slots, ~0.44 SOL), medium (1024, ~1.73 SOL), large (4096, ~6.91 SOL). Default: small"),
     network: z.enum(["devnet", "mainnet"]).optional().describe("Network (default: devnet)"),
+    pyth_feed_id: z.string().optional().describe("Pyth feed ID hex (64 chars). If set, creates a Pyth-pinned market — no manual price pushing needed. SOL/USD: ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"),
   },
   async (args) => {
     try {
@@ -961,6 +962,7 @@ server.tool(
         lpCollateral: BigInt(args.lp_collateral),
         tier: args.tier as any,
         network: args.network as any,
+        pythFeedId: args.pyth_feed_id,
       });
       return ok(result);
     } catch (e: any) {

@@ -1,6 +1,6 @@
 {
   "name": "outsmart-agent",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "description": "MCP server + AI skills for Solana trading — wraps the outsmart CLI library for AI agent use.",
   "engines": {
     "node": ">=20.0.0"
@@ -48,7 +48,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@solana/spl-token": "^0.4.0",
     "@solana/web3.js": "^1.95.0",
-    "outsmart": "^2.0.0-alpha.9",
+    "outsmart": "^2.0.0-alpha.10",
     "zod": "^3.25.0"
   },
   "devDependencies": {
